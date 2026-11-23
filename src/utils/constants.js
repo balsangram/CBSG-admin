@@ -33,6 +33,7 @@ export const ROUTES = {
   PAYOUT_MANAGEMENT: '/payout-management',
   REPORTS: '/reports',
   REPORTS_ANALYTICS: '/reports-analytics',
+  TRANSACTION_LOGS: '/transaction-logs',
   PROFILE: '/profile',
   SETTINGS: '/settings',
 };

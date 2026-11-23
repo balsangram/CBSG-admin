@@ -13,6 +13,7 @@ import TeamStructurePage from '../modules/team/pages/TeamStructurePage';
 import IncentiveLedgerPage from '../modules/team/pages/IncentiveLedgerPage';
 import PayoutManagementPage from '../modules/team/pages/PayoutManagementPage';
 import ReportsPage from '../modules/reports/pages/ReportsPage';
+import TransactionLogsPage from '../modules/reports/pages/TransactionLogsPage';
 import ProfilePage from '../modules/dashboard/pages/ProfilePage';
 import SettingsPage from '../modules/dashboard/pages/SettingsPage';
 import ProtectedRoute from '../components/common/ProtectedRoute';
@@ -177,6 +178,16 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <ReportsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected Transaction Logs */}
+      <Route
+        path={ROUTES.TRANSACTION_LOGS}
+        element={
+          <ProtectedRoute>
+            <TransactionLogsPage />
           </ProtectedRoute>
         }
       />

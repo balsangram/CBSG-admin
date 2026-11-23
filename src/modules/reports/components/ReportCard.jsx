@@ -77,3 +77,4 @@ export function ReportCard({ report, onPreview }) {
 }
 
 export default ReportCard;
+
