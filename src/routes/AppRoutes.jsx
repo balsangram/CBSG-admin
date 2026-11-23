@@ -11,6 +11,7 @@ import DepositAccountsPage from '../modules/savings/pages/DepositAccountsPage';
 import DaybookPage from '../modules/collections/pages/DaybookPage';
 import TeamStructurePage from '../modules/team/pages/TeamStructurePage';
 import IncentiveLedgerPage from '../modules/team/pages/IncentiveLedgerPage';
+import ReportsPage from '../modules/reports/pages/ReportsPage';
 import ProfilePage from '../modules/dashboard/pages/ProfilePage';
 import SettingsPage from '../modules/dashboard/pages/SettingsPage';
 import ProtectedRoute from '../components/common/ProtectedRoute';
@@ -146,6 +147,25 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <IncentiveLedgerPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected Reports & Analytics */}
+      <Route
+        path={ROUTES.REPORTS}
+        element={
+          <ProtectedRoute>
+            <ReportsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path={ROUTES.REPORTS_ANALYTICS}
+        element={
+          <ProtectedRoute>
+            <ReportsPage />
           </ProtectedRoute>
         }
       />

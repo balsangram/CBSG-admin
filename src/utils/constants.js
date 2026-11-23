@@ -30,6 +30,8 @@ export const ROUTES = {
   DAYBOOK: '/daybook',
   TEAM_STRUCTURE: '/team-structure',
   INCENTIVE_LEDGER: '/incentive-ledger',
+  REPORTS: '/reports',
+  REPORTS_ANALYTICS: '/reports-analytics',
   PROFILE: '/profile',
   SETTINGS: '/settings',
 };

@@ -68,7 +68,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, collapsed = false }) {
     {
       group: 'Reports',
       items: [
-        { name: 'Reports & analytics', icon: LineChart, path: '#reports', badge: null },
+        { name: 'Reports & analytics', icon: LineChart, path: ROUTES.REPORTS, badge: null, isNavLink: true },
         { name: 'Transaction logs', icon: History, path: '#transaction-logs', badge: null },
       ],
     },
