@@ -30,6 +30,7 @@ export const ROUTES = {
   DAYBOOK: '/daybook',
   TEAM_STRUCTURE: '/team-structure',
   INCENTIVE_LEDGER: '/incentive-ledger',
+  PAYOUT_MANAGEMENT: '/payout-management',
   REPORTS: '/reports',
   REPORTS_ANALYTICS: '/reports-analytics',
   PROFILE: '/profile',

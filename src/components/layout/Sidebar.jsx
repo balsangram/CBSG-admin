@@ -62,7 +62,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, collapsed = false }) {
       items: [
         { name: 'Team structure', icon: Network, path: ROUTES.TEAM_STRUCTURE, badge: null, isNavLink: true },
         { name: 'Incentive ledger', icon: Receipt, path: ROUTES.INCENTIVE_LEDGER, badge: null, isNavLink: true },
-        { name: 'Payout management', icon: Banknote, path: '#payout-management', badge: '1', badgeVariant: 'warning' },
+        { name: 'Payout management', icon: Banknote, path: ROUTES.PAYOUT_MANAGEMENT, badge: '1', badgeVariant: 'warning', isNavLink: true },
       ],
     },
     {
