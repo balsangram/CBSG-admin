@@ -8,6 +8,8 @@ import Customer360Page from '../modules/customers/pages/Customer360Page';
 import KycQueuePage from '../modules/customers/pages/KycQueuePage';
 import SchemeMasterPage from '../modules/savings/pages/SchemeMasterPage';
 import DepositAccountsPage from '../modules/savings/pages/DepositAccountsPage';
+import DaybookPage from '../modules/collections/pages/DaybookPage';
+import TeamStructurePage from '../modules/team/pages/TeamStructurePage';
 import ProfilePage from '../modules/dashboard/pages/ProfilePage';
 import SettingsPage from '../modules/dashboard/pages/SettingsPage';
 import ProtectedRoute from '../components/common/ProtectedRoute';
@@ -113,6 +115,26 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <DepositAccountsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected Collections Daybook */}
+      <Route
+        path={ROUTES.DAYBOOK}
+        element={
+          <ProtectedRoute>
+            <DaybookPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected Team Structure */}
+      <Route
+        path={ROUTES.TEAM_STRUCTURE}
+        element={
+          <ProtectedRoute>
+            <TeamStructurePage />
           </ProtectedRoute>
         }
       />

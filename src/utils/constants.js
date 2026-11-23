@@ -27,6 +27,8 @@ export const ROUTES = {
   KYC_QUEUE: '/kyc-queue',
   SCHEME_MASTER: '/scheme-master',
   DEPOSIT_ACCOUNTS: '/deposit-accounts',
+  DAYBOOK: '/daybook',
+  TEAM_STRUCTURE: '/team-structure',
   PROFILE: '/profile',
   SETTINGS: '/settings',
 };

@@ -54,13 +54,13 @@ export function Sidebar({ mobileOpen, setMobileOpen, collapsed = false }) {
     {
       group: 'Collections',
       items: [
-        { name: 'Daybook', icon: BookOpen, path: '#daybook', badge: null },
+        { name: 'Daybook', icon: BookOpen, path: ROUTES.DAYBOOK, badge: null, isNavLink: true },
       ],
     },
     {
       group: 'Team & Incentives',
       items: [
-        { name: 'Team structure', icon: Network, path: '#team-structure', badge: null },
+        { name: 'Team structure', icon: Network, path: ROUTES.TEAM_STRUCTURE, badge: null, isNavLink: true },
         { name: 'Incentive ledger', icon: Receipt, path: '#incentive-ledger', badge: null },
         { name: 'Payout management', icon: Banknote, path: '#payout-management', badge: '1', badgeVariant: 'warning' },
       ],
