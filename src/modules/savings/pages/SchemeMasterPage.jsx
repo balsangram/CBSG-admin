@@ -69,8 +69,9 @@ export function SchemeMasterPage() {
       name: 'New Custom Savings Plan',
       planType: 'MIP',
       minInvestment: 500,
-      payout: 'Monthly',
+      payout: '180',
       monthlyInterest: 1.2,
+      monthlyInterestDate: '1st of every month',
       preClosureRule: '90 days lock-in. 1% penalty on pre-closure.',
       isLive: false,
       rules: [{ id: 'rule-new-1', name: 'Eligibility', description: 'Resident Indian individuals aged 18+' }],
@@ -220,16 +221,13 @@ export function SchemeMasterPage() {
                   <label className="block text-[11px] font-semibold text-[#7a6e67] mb-1">
                     Plan type
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={scheme.planType}
                     onChange={(e) => handleFieldChange('planType', e.target.value)}
-                    className="w-full bg-white border border-[#ded8cb] focus:border-[#c88a29] rounded-xl px-3.5 py-2.5 text-xs text-[#2c1b15] font-semibold outline-none shadow-2xs cursor-pointer"
-                  >
-                    <option value="MIP">MIP</option>
-                    <option value="RD">Recurring Deposit (RD)</option>
-                    <option value="FD">Fixed Deposit (FD)</option>
-                    <option value="SIP">Systematic Plan</option>
-                  </select>
+                    placeholder="e.g. MIP"
+                    className="w-full bg-white border border-[#ded8cb] focus:border-[#c88a29] rounded-xl px-3.5 py-2.5 text-xs text-[#2c1b15] font-semibold outline-none shadow-2xs"
+                  />
                 </div>
 
                 <div>
@@ -251,16 +249,29 @@ export function SchemeMasterPage() {
                   <label className="block text-[11px] font-semibold text-[#7a6e67] mb-1">
                     Payout
                   </label>
-                  <select
+                  <input
+                    type="text"
                     value={scheme.payout}
                     onChange={(e) => handleFieldChange('payout', e.target.value)}
-                    className="w-full bg-white border border-[#ded8cb] focus:border-[#c88a29] rounded-xl px-3.5 py-2.5 text-xs text-[#2c1b15] font-semibold outline-none shadow-2xs cursor-pointer"
-                  >
-                    <option value="Monthly">Monthly</option>
-                    <option value="Quarterly">Quarterly</option>
-                    <option value="Annual">Annual</option>
-                    <option value="At Maturity">At Maturity</option>
-                  </select>
+                    placeholder="e.g. 180, 360, Monthly"
+                    className="w-full bg-white border border-[#ded8cb] focus:border-[#c88a29] rounded-xl px-3.5 py-2.5 text-xs text-[#2c1b15] font-semibold outline-none shadow-2xs"
+                  />
+                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                    {['180', '360', 'Monthly', 'At Maturity'].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => handleFieldChange('payout', preset)}
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-medium border transition-colors cursor-pointer ${
+                          scheme.payout === preset
+                            ? 'bg-[#2c1b15] text-white border-[#2c1b15]'
+                            : 'bg-[#faf8f4] text-[#61554d] border-[#ded8cb] hover:bg-white'
+                        }`}
+                      >
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>
@@ -274,6 +285,36 @@ export function SchemeMasterPage() {
                     onChange={(e) => handleFieldChange('monthlyInterest', Number(e.target.value))}
                     className="w-full bg-white border border-[#ded8cb] focus:border-[#c88a29] rounded-xl px-3.5 py-2.5 text-xs text-[#2c1b15] font-semibold outline-none shadow-2xs font-mono"
                   />
+                </div>
+              </div>
+
+              {/* Monthly Interest Date */}
+              <div>
+                <label className="block text-[11px] font-semibold text-[#7a6e67] mb-1">
+                  Monthly interest date
+                </label>
+                <input
+                  type="text"
+                  value={scheme.monthlyInterestDate || ''}
+                  onChange={(e) => handleFieldChange('monthlyInterestDate', e.target.value)}
+                  placeholder="e.g. 1st of every month, 10th, 180"
+                  className="w-full bg-white border border-[#ded8cb] focus:border-[#c88a29] rounded-xl px-3.5 py-2.5 text-xs text-[#2c1b15] font-semibold outline-none shadow-2xs"
+                />
+                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  {['1st of every month', '5th of month', '10th of month', 'End of month'].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => handleFieldChange('monthlyInterestDate', preset)}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-medium border transition-colors cursor-pointer ${
+                        scheme.monthlyInterestDate === preset
+                          ? 'bg-[#2c1b15] text-white border-[#2c1b15]'
+                          : 'bg-[#faf8f4] text-[#61554d] border-[#ded8cb] hover:bg-white'
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -419,7 +460,11 @@ export function SchemeMasterPage() {
 
             {/* Legal / Policy Note */}
             <p className="text-[10px] text-[#8a7e75] leading-relaxed">
-              Interest is credited to the customer's personal bank account. KYC is required to start saving.
+              Interest is credited to customer's personal bank account on{' '}
+              <strong className="text-[#2c1b15]">
+                {scheme.monthlyInterestDate || '1st of every month'}
+              </strong>
+              . KYC is required to start saving.
             </p>
 
             {/* Plan Rules Preview */}
