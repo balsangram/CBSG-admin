@@ -73,3 +73,4 @@ export const INITIAL_AUDIT_LOGS = [
 export const auditService = {
   getLogs: () => [...INITIAL_AUDIT_LOGS],
 };
+
