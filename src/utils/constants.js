@@ -5,9 +5,9 @@ export const APP_CONFIG = {
   DEMO_EMAIL: 'sanjay.k@cbsgfinancial.in',
   DEMO_PASSWORD: 'Password@123',
   DEMO_OTP: '123456',
-  DEMO_STAFF_NAME: 'Sanjay Kumar',
-  DEMO_STAFF_ROLE: 'Senior Operations Officer',
-  DEMO_STAFF_BRANCH: 'Mumbai Central Operations Desk',
+  DEMO_STAFF_NAME: 'Sanjay Kulkarni',
+  DEMO_STAFF_ROLE: 'Super Admin',
+  DEMO_STAFF_BRANCH: 'Pune Central Head Office',
 };
 
 export const STORAGE_KEYS = {
@@ -21,6 +21,12 @@ export const ROUTES = {
   LOGIN: '/login',
   TWO_FACTOR: '/two-factor',
   DASHBOARD: '/dashboard',
+  CUSTOMERS: '/customers',
+  CUSTOMER_RECORDS: '/customer-records',
+  CUSTOMER_360: '/customer-360',
+  KYC_QUEUE: '/kyc-queue',
+  SCHEME_MASTER: '/scheme-master',
+  DEPOSIT_ACCOUNTS: '/deposit-accounts',
   PROFILE: '/profile',
   SETTINGS: '/settings',
 };

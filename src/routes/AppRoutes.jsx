@@ -3,6 +3,11 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import SignInPage from '../modules/auth/pages/SignInPage';
 import TwoFactorPage from '../modules/auth/pages/TwoFactorPage';
 import DashboardPage from '../modules/dashboard/pages/DashboardPage';
+import CustomerRecordsPage from '../modules/customers/pages/CustomerRecordsPage';
+import Customer360Page from '../modules/customers/pages/Customer360Page';
+import KycQueuePage from '../modules/customers/pages/KycQueuePage';
+import SchemeMasterPage from '../modules/savings/pages/SchemeMasterPage';
+import DepositAccountsPage from '../modules/savings/pages/DepositAccountsPage';
 import ProfilePage from '../modules/dashboard/pages/ProfilePage';
 import SettingsPage from '../modules/dashboard/pages/SettingsPage';
 import ProtectedRoute from '../components/common/ProtectedRoute';
@@ -40,6 +45,74 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected Customer Records */}
+      <Route
+        path={ROUTES.CUSTOMERS}
+        element={
+          <ProtectedRoute>
+            <CustomerRecordsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path={ROUTES.CUSTOMER_RECORDS}
+        element={
+          <ProtectedRoute>
+            <CustomerRecordsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected Customer 360 Profile */}
+      <Route
+        path={ROUTES.CUSTOMER_360}
+        element={
+          <ProtectedRoute>
+            <Customer360Page />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path={`${ROUTES.CUSTOMER_360}/:id`}
+        element={
+          <ProtectedRoute>
+            <Customer360Page />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected KYC Approval Queue */}
+      <Route
+        path={ROUTES.KYC_QUEUE}
+        element={
+          <ProtectedRoute>
+            <KycQueuePage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected Savings Scheme Master */}
+      <Route
+        path={ROUTES.SCHEME_MASTER}
+        element={
+          <ProtectedRoute>
+            <SchemeMasterPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected Deposit Accounts */}
+      <Route
+        path={ROUTES.DEPOSIT_ACCOUNTS}
+        element={
+          <ProtectedRoute>
+            <DepositAccountsPage />
           </ProtectedRoute>
         }
       />

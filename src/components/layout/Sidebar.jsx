@@ -1,64 +1,84 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  User,
-  Settings,
-  LogOut,
+  LayoutGrid,
+  Users,
+  UserCheck,
+  ShieldAlert,
+  Landmark,
+  Wallet,
+  BookOpen,
+  Network,
+  Receipt,
+  Banknote,
+  LineChart,
+  History,
+  Store,
+  UserCog,
+  Clock,
   X,
-  CreditCard,
-  FileCheck2,
-  Users2,
+  ArrowLeft,
 } from 'lucide-react';
 import Logo from '../common/Logo';
-import useAuth from '../../modules/auth/hooks/useAuth';
 import { ROUTES, APP_CONFIG } from '../../utils/constants';
 
-export function Sidebar({ mobileOpen, setMobileOpen }) {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await logout();
-    navigate(ROUTES.LOGIN);
-  };
-
-  const navItems = [
+export function Sidebar({ mobileOpen, setMobileOpen, collapsed = false }) {
+  const menuGroups = [
     {
-      label: 'Dashboard',
-      icon: LayoutDashboard,
-      path: ROUTES.DASHBOARD,
-      badge: null,
+      group: 'Dashboard',
+      items: [
+        {
+          name: 'Overview',
+          icon: LayoutGrid,
+          path: ROUTES.DASHBOARD,
+          badge: null,
+          isExact: true,
+        },
+      ],
     },
     {
-      label: 'Loan Desk',
-      icon: CreditCard,
-      path: '#loans',
-      badge: '12 new',
+      group: 'Customers',
+      items: [
+        { name: 'Customer records', icon: Users, path: ROUTES.CUSTOMERS, badge: null, isNavLink: true },
+        { name: 'Customer 360', icon: UserCheck, path: ROUTES.CUSTOMER_360, badge: null, isNavLink: true },
+        { name: 'KYC queue', icon: ShieldAlert, path: ROUTES.KYC_QUEUE, badge: '2', badgeVariant: 'warning', isNavLink: true },
+      ],
     },
     {
-      label: 'Maker-Checker Queue',
-      icon: FileCheck2,
-      path: '#maker-checker',
-      badge: '6 pending',
+      group: 'Savings',
+      items: [
+        { name: 'Scheme master', icon: Landmark, path: ROUTES.SCHEME_MASTER, badge: null, isNavLink: true },
+        { name: 'Deposit accounts', icon: Wallet, path: ROUTES.DEPOSIT_ACCOUNTS, badge: null, isNavLink: true },
+      ],
     },
     {
-      label: 'Staff Directory',
-      icon: Users2,
-      path: '#staff',
-      badge: null,
+      group: 'Collections',
+      items: [
+        { name: 'Daybook', icon: BookOpen, path: '#daybook', badge: null },
+      ],
     },
     {
-      label: 'Profile',
-      icon: User,
-      path: ROUTES.PROFILE,
-      badge: null,
+      group: 'Team & Incentives',
+      items: [
+        { name: 'Team structure', icon: Network, path: '#team-structure', badge: null },
+        { name: 'Incentive ledger', icon: Receipt, path: '#incentive-ledger', badge: null },
+        { name: 'Payout management', icon: Banknote, path: '#payout-management', badge: '1', badgeVariant: 'warning' },
+      ],
     },
     {
-      label: 'Settings',
-      icon: Settings,
-      path: ROUTES.SETTINGS,
-      badge: null,
+      group: 'Reports',
+      items: [
+        { name: 'Reports & analytics', icon: LineChart, path: '#reports', badge: null },
+        { name: 'Transaction logs', icon: History, path: '#transaction-logs', badge: null },
+      ],
+    },
+    {
+      group: 'Administration',
+      items: [
+        { name: 'Branches', icon: Store, path: '#branches', badge: null },
+        { name: 'Users & roles', icon: UserCog, path: '#users-roles', badge: null },
+        { name: 'Audit log', icon: Clock, path: '#audit-log', badge: null },
+      ],
     },
   ];
 
@@ -67,147 +87,105 @@ export function Sidebar({ mobileOpen, setMobileOpen }) {
       {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs lg:hidden transition-opacity"
+          className="fixed inset-0 z-40 bg-stone-900/40 backdrop-blur-xs lg:hidden transition-opacity"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-72 bg-white border-r border-slate-200/90 flex flex-col justify-between transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
-        }`}
+        className={`fixed top-0 bottom-0 left-0 z-50 bg-[#f3efe6] border-r border-[#e5dfd2] flex flex-col justify-between transition-all duration-300 ease-in-out ${
+          collapsed ? 'w-20' : 'w-64'
+        } ${mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}`}
       >
-        {/* Top Header / Branding */}
-        <div>
-          <div className="h-20 px-6 flex items-center justify-between border-b border-slate-100">
-            <Logo variant="light" size="md" />
-            <button
-              type="button"
-              onClick={() => setMobileOpen(false)}
-              className="lg:hidden p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* NBFC Regulatory Status Pill */}
-          <div className="px-6 py-3.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] font-semibold text-slate-700 tracking-wide uppercase">
-                RBI Regulated NBFC
-              </span>
-            </div>
-            <span className="text-[10px] font-mono font-medium text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
-              DESK 01
-            </span>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="p-4 space-y-1">
-            <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-600">
-              Main Operations
-            </div>
-
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isDashboard = item.path === ROUTES.DASHBOARD;
-
-              return isDashboard ? (
-                <NavLink
-                  key={item.label}
-                  to={item.path}
-                  onClick={() => setMobileOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all group ${
-                      isActive
-                        ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                    }`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <div className="flex items-center gap-3">
-                        <Icon
-                          className={`w-4 h-4 transition-colors ${
-                            isActive ? 'text-white' : 'text-slate-600 group-hover:text-slate-700'
-                          }`}
-                        />
-                        <span>{item.label}</span>
-                      </div>
-                      {item.badge && (
-                        <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                            isActive
-                              ? 'bg-white/20 text-white'
-                              : 'bg-blue-50 text-blue-700'
-                          }`}
-                        >
-                          {item.badge}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </NavLink>
-              ) : (
-                <a
-                  key={item.label}
-                  href={item.path}
-                  onClick={(e) => {
-                    if (item.path.startsWith('#')) e.preventDefault();
-                    setMobileOpen(false);
-                  }}
-                  className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all group"
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className="w-4 h-4 text-slate-600 group-hover:text-slate-700" />
-                    <span>{item.label}</span>
-                  </div>
-                  {item.badge && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/50">
-                      {item.badge}
-                    </span>
-                  )}
-                </a>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Bottom Section: Staff Profile Card & Logout */}
-        <div className="p-4 border-t border-slate-200/90 space-y-3 bg-slate-50/50">
-          {/* Staff Info */}
-          <div className="p-3 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
-            <div className="relative">
-              <img
-                src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'}
-                alt={user?.name || 'Staff Avatar'}
-                className="w-10 h-10 rounded-full object-cover border border-slate-200"
-              />
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white" />
-            </div>
-
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-900 truncate">
-                {user?.name || APP_CONFIG.DEMO_STAFF_NAME}
-              </p>
-              <p className="text-[11px] text-slate-500 truncate">
-                {user?.role || APP_CONFIG.DEMO_STAFF_ROLE}
-              </p>
-            </div>
-          </div>
-
-          {/* Logout Button */}
+        {/* Top Header / CBSG Logo */}
+        <div className="h-16 px-5 flex items-center justify-between border-b border-[#e8e2d5]">
+          <Logo variant="light" size="sm" />
           <button
             type="button"
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold text-rose-700 hover:text-rose-800 bg-rose-50/70 hover:bg-rose-100/70 border border-rose-200/60 transition-colors cursor-pointer"
+            onClick={() => setMobileOpen(false)}
+            className="lg:hidden p-1.5 text-stone-400 hover:text-stone-700 rounded-lg hover:bg-[#e8e2d5] cursor-pointer"
           >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out Session</span>
+            <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Scrollable Navigation Items */}
+        <div className="flex-1 overflow-y-auto px-3.5 py-3 space-y-4 text-xs">
+          {menuGroups.map((group) => (
+            <div key={group.group} className="space-y-1">
+              {!collapsed && (
+                <div className="px-2.5 py-1 text-[10.5px] font-medium text-[#8f8278] select-none">
+                  {group.group}
+                </div>
+              )}
+
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isNav = item.isNavLink || item.isExact;
+
+                return isNav ? (
+                  <NavLink
+                    key={item.name}
+                    to={item.path}
+                    onClick={() => setMobileOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all select-none ${
+                        isActive
+                          ? 'bg-white text-[#2c1b15] shadow-xs border border-[#e6e0d4]'
+                          : 'text-[#61554d] hover:text-[#2c1b15] hover:bg-white/60'
+                      }`
+                    }
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon className="w-4 h-4 text-[#2c1b15] shrink-0" />
+                      {!collapsed && <span className="truncate">{item.name}</span>}
+                    </div>
+
+                    {!collapsed && item.badge && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-[#fef1db] text-[#b46500] border border-[#fbd398] min-w-4 text-center">
+                        {item.badge}
+                      </span>
+                    )}
+                  </NavLink>
+                ) : (
+                  <a
+                    key={item.name}
+                    href={item.path}
+                    onClick={(e) => {
+                      if (item.path.startsWith('#')) e.preventDefault();
+                      setMobileOpen(false);
+                    }}
+                    className="flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-medium text-[#61554d] hover:text-[#2c1b15] hover:bg-white/60 transition-colors select-none group"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <Icon className="w-3.5 h-3.5 text-[#7a6e66] group-hover:text-[#2c1b15] shrink-0" />
+                      {!collapsed && <span className="truncate">{item.name}</span>}
+                    </div>
+
+                    {!collapsed && item.badge && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-[#fef1db] text-[#b46500] border border-[#fbd398] min-w-4 text-center">
+                        {item.badge}
+                      </span>
+                    )}
+                  </a>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom Back to Launcher Link */}
+        <div className="p-3 border-t border-[#e8e2d5] bg-[#ece7dd]">
+          <a
+            href={APP_CONFIG.LAUNCHER_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#6e6158] hover:text-[#2c1b15] hover:bg-white/70 transition-colors select-none"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            {!collapsed && <span>Back to Launcher</span>}
+          </a>
         </div>
       </aside>
     </>

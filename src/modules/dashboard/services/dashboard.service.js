@@ -1,8 +1,136 @@
 /**
- * Dashboard Mock Service with realistic NBFC Enterprise Data
+ * CBSG Admin Console Dashboard Data & Service
+ * Matches the official CBSG Finance Limited Performance Overview Console
  */
 
-export const mockDashboardData = {
+export const performanceOverviewData = {
+  hero: {
+    title: 'Explore your',
+    titleEmphasis: 'performance',
+    tag: 'Analytics · Portfolio overview',
+    organization: 'CBSG Finance Limited',
+    depositBookLabel: 'Deposit book',
+    depositBookValue: '₹7.72 L',
+  },
+
+  portfolioPerformance: [
+    {
+      id: 'active-customers',
+      indicator: 'Active customers',
+      value: '13',
+      status: 'Active',
+      statusVariant: 'success',
+    },
+    {
+      id: 'savings-plans',
+      indicator: 'Savings plans',
+      value: '14',
+      status: 'Active',
+      statusVariant: 'success',
+    },
+    {
+      id: 'incentives-payable',
+      indicator: 'Incentives payable',
+      value: '₹10,605',
+      status: 'Payable',
+      statusVariant: 'warning',
+    },
+    {
+      id: 'pending-kyc',
+      indicator: 'Pending KYC',
+      value: '2',
+      status: 'Pending',
+      statusVariant: 'warning',
+    },
+  ],
+
+  goalProgress: {
+    percentage: 96.9,
+    label: 'collection efficiency',
+    missedWeeks: 8,
+    scheduledInstalments: 259,
+  },
+
+  operationsOverview: {
+    pendingKyc: 2,
+    approvals: 1,
+  },
+
+  collectionTrends: {
+    todayAmount: '₹0',
+    todayLabel: 'Daily deposit collections',
+    isTodayActive: true,
+    yAxis: ['₹80k', '₹60k', '₹40k', '₹20k', '₹0k'],
+    dates: [
+      { date: '7 Nov', value: 24 },
+      { date: '8 Nov', value: 29 },
+      { date: '9 Nov', value: 31 },
+      { date: '10 Nov', value: 28 },
+      { date: '11 Nov', value: 30 },
+      { date: '12 Nov', value: 29 },
+      { date: '13 Nov', value: 28 },
+      { date: '14 Nov', value: 27 },
+      { date: '15 Nov', value: 28 },
+      { date: '16 Nov', value: 36 },
+      { date: '17 Nov', value: 76 }, // Major Peak on 17 Nov
+      { date: '18 Nov', value: 28 },
+      { date: '19 Nov', value: 24 },
+      { date: '20 Nov', value: 20 },
+    ],
+  },
+
+  liveTransactions: [
+    {
+      id: 'tx-1',
+      time: '19 Nov 05:58 pm',
+      customer: 'dodmdd',
+      type: 'Deposit',
+      by: 'App',
+      amount: '₹100',
+      status: 'Success',
+    },
+    {
+      id: 'tx-2',
+      time: '19 Nov 05:01 pm',
+      customer: 'dodmdd',
+      type: 'Deposit',
+      by: 'App',
+      amount: '₹100',
+      status: 'Success',
+    },
+    {
+      id: 'tx-3',
+      time: '19 Nov 12:45 pm',
+      customer: 'Lakshmi Reddy',
+      type: 'Deposit',
+      by: 'Vikram Singh',
+      amount: '₹200',
+      status: 'Success',
+    },
+    {
+      id: 'tx-4',
+      time: '19 Nov 11:30 am',
+      customer: 'Neha Gupta',
+      type: 'Deposit',
+      by: 'Sneha Iyer',
+      amount: '₹500',
+      status: 'Success',
+    },
+  ],
+
+  topExecutives: [
+    {
+      id: 'exec-1',
+      name: 'Anil Mehta',
+      role: 'Team leader · Pune',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
+      customers: 10,
+      collectedToday: '₹0',
+      trend: 'up',
+    },
+  ],
+
+  // Also include the 4 statistics cards for complete coverage
   stats: [
     {
       id: 'total-users',
@@ -49,198 +177,11 @@ export const mockDashboardData = {
       iconName: 'CheckCircle',
     },
   ],
-
-  recentActivities: [
-    {
-      id: 'act-1',
-      title: 'Maker approved gold loan disbursement',
-      reference: 'LN-8924 · ₹12,50,000',
-      user: 'Anita Sharma',
-      role: 'Loan Officer',
-      time: '12 mins ago',
-      type: 'approval',
-      status: 'Checker Pending',
-      statusColor: 'amber',
-    },
-    {
-      id: 'act-2',
-      title: 'Checker cleared bulk weekly payout batch',
-      reference: 'BP-4892 · 64 Beneficiaries',
-      user: 'Sanjay Kumar (You)',
-      role: 'Operations Head',
-      time: '34 mins ago',
-      type: 'payout',
-      status: 'Disbursed',
-      statusColor: 'emerald',
-    },
-    {
-      id: 'act-3',
-      title: 'KYC Document verification completed',
-      reference: 'USR-2910 · MSME Commercial',
-      user: 'Priya Iyer',
-      role: 'Compliance Lead',
-      time: '1 hour ago',
-      type: 'kyc',
-      status: 'Verified',
-      statusColor: 'blue',
-    },
-    {
-      id: 'act-4',
-      title: 'NACH auto-debit collection cycle processed',
-      reference: 'NACH-7491 · ₹1,42,80,000',
-      user: 'System Automated',
-      role: 'Core Engine',
-      time: '2 hours ago',
-      type: 'system',
-      status: 'Settled',
-      statusColor: 'emerald',
-    },
-    {
-      id: 'act-5',
-      title: 'RBI Quarterly audit report generated',
-      reference: 'REP-Q3-NBFC · 14.2 MB PDF',
-      user: 'Vikram Mehta',
-      role: 'Audit Director',
-      time: '3 hours ago',
-      type: 'audit',
-      status: 'Archived',
-      statusColor: 'slate',
-    },
-  ],
-
-  recentUsers: [
-    {
-      id: 'usr-1',
-      name: 'Dr. Ramesh Kulkarni',
-      email: 'ramesh.k@kulkarnilabs.com',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
-      type: 'MSME Business Loan',
-      accountNumber: 'CBSG-LN-99214',
-      amount: '₹35,00,000',
-      status: 'Active',
-      joinedDate: 'Nov 19, 2026',
-      branch: 'Mumbai Central',
-    },
-    {
-      id: 'usr-2',
-      name: 'Sunita Narang',
-      email: 's.narang@brighttextiles.in',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80',
-      type: 'Fixed Term Deposit',
-      accountNumber: 'CBSG-FD-48201',
-      amount: '₹50,00,000',
-      status: 'Active',
-      joinedDate: 'Nov 18, 2026',
-      branch: 'Surat North',
-    },
-    {
-      id: 'usr-3',
-      name: 'Amitabh Sen',
-      email: 'amitabh.sen@apexinfra.co',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80',
-      type: 'Commercial Vehicle Loan',
-      accountNumber: 'CBSG-LN-77412',
-      amount: '₹18,50,000',
-      status: 'Under Review',
-      joinedDate: 'Nov 18, 2026',
-      branch: 'Kolkata Main',
-    },
-    {
-      id: 'usr-4',
-      name: 'Kavita Menon',
-      email: 'kavita.m@zenithretail.org',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
-      type: 'Recurring Deposit',
-      accountNumber: 'CBSG-RD-33819',
-      amount: '₹1,20,000/mo',
-      status: 'Active',
-      joinedDate: 'Nov 17, 2026',
-      branch: 'Bengaluru MG Road',
-    },
-    {
-      id: 'usr-5',
-      name: 'Harpreet Singh',
-      email: 'harpreet@singhagrotech.in',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80',
-      type: 'Agri Infrastructure Loan',
-      accountNumber: 'CBSG-LN-55209',
-      amount: '₹24,00,000',
-      status: 'Pending KYC',
-      joinedDate: 'Nov 16, 2026',
-      branch: 'Chandigarh Hub',
-    },
-  ],
-
-  taskOverview: [
-    {
-      id: 'task-1',
-      title: 'High-Value Loan Checker Verification',
-      category: 'Maker-Checker Queue',
-      pendingCount: 6,
-      progress: 68,
-      due: 'Within 2 hours',
-      priority: 'High',
-      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200',
-    },
-    {
-      id: 'task-2',
-      title: 'Weekly Payout Batch NACH Clearance',
-      category: 'Disbursements',
-      pendingCount: 14,
-      progress: 85,
-      due: 'Today, 4:00 PM',
-      priority: 'Urgent',
-      badgeClass: 'bg-amber-50 text-amber-700 border-amber-200',
-    },
-    {
-      id: 'task-3',
-      title: 'RBI Liquidity & CRR Maintenance Check',
-      category: 'Regulatory Compliance',
-      pendingCount: 2,
-      progress: 92,
-      due: 'Today, 6:00 PM',
-      priority: 'Normal',
-      badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
-    },
-    {
-      id: 'task-4',
-      title: 'KYC Document Remediation (Tier 3)',
-      category: 'Customer Onboarding',
-      pendingCount: 16,
-      progress: 45,
-      due: 'Tomorrow, 12:00 PM',
-      priority: 'Medium',
-      badgeClass: 'bg-slate-50 text-slate-700 border-slate-200',
-    },
-  ],
-
-  chartData: {
-    '7d': [
-      { day: 'Mon', disbursements: 34, deposits: 42, amountD: '₹34L', amountC: '₹42L' },
-      { day: 'Tue', disbursements: 48, deposits: 56, amountD: '₹48L', amountC: '₹56L' },
-      { day: 'Wed', disbursements: 52, deposits: 49, amountD: '₹52L', amountC: '₹49L' },
-      { day: 'Thu', disbursements: 68, deposits: 74, amountD: '₹68L', amountC: '₹74L' },
-      { day: 'Fri', disbursements: 85, deposits: 90, amountD: '₹85L', amountC: '₹90L' },
-      { day: 'Sat', disbursements: 41, deposits: 38, amountD: '₹41L', amountC: '₹38L' },
-      { day: 'Sun', disbursements: 22, deposits: 28, amountD: '₹22L', amountC: '₹28L' },
-    ],
-    '30d': [
-      { day: 'W1', disbursements: 240, deposits: 290, amountD: '₹2.4Cr', amountC: '₹2.9Cr' },
-      { day: 'W2', disbursements: 310, deposits: 340, amountD: '₹3.1Cr', amountC: '₹3.4Cr' },
-      { day: 'W3', disbursements: 390, deposits: 420, amountD: '₹3.9Cr', amountC: '₹4.2Cr' },
-      { day: 'W4', disbursements: 460, deposits: 510, amountD: '₹4.6Cr', amountC: '₹5.1Cr' },
-    ],
-    '90d': [
-      { day: 'Sep', disbursements: 1200, deposits: 1450, amountD: '₹12.0Cr', amountC: '₹14.5Cr' },
-      { day: 'Oct', disbursements: 1480, deposits: 1680, amountD: '₹14.8Cr', amountC: '₹16.8Cr' },
-      { day: 'Nov', disbursements: 1820, deposits: 2100, amountD: '₹18.2Cr', amountC: '₹21.0Cr' },
-    ],
-  },
 };
 
 export const dashboardService = {
   async getDashboardSummary() {
-    return mockDashboardData;
+    return performanceOverviewData;
   },
 };
 

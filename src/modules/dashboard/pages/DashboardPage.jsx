@@ -1,435 +1,484 @@
 import React, { useState } from 'react';
 import {
-  FileText,
-  CreditCard,
-  UserCheck,
+  RotateCcw,
+  SlidersHorizontal,
   Download,
-  Plus,
-  ArrowUpRight,
-  CheckCircle2,
-  Clock,
+  TrendingUp,
   X,
+  Sliders,
 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
-import StatsCard from '../components/StatsCard';
-import RecentActivity from '../components/RecentActivity';
-import DashboardChart from '../components/DashboardChart';
-import Button from '../../../components/common/Button';
-import { mockDashboardData } from '../services/dashboard.service';
+import CollectionTrendsChart from '../components/CollectionTrendsChart';
+import { performanceOverviewData } from '../services/dashboard.service';
 
 export function DashboardPage() {
-  const [data] = useState(mockDashboardData);
-  const [actionModal, setActionModal] = useState(null); // 'loan', 'payout', 'kyc', 'report'
-  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [data] = useState(performanceOverviewData);
+  const [showSignedInAlert, setShowSignedInAlert] = useState(true);
+  const [activeModal, setActiveModal] = useState(null); // 'kyc', 'approvals', 'details', 'export'
+  const [alertMessage, setAlertMessage] = useState('');
 
-  // Handle Quick Action confirmation
-  const handleActionExecute = (actionType) => {
-    setActionModal(null);
-    let msg = '';
-    if (actionType === 'loan') {
-      msg = 'New Loan Application #LN-9014 submitted into Maker-Checker queue!';
-    } else if (actionType === 'payout') {
-      msg = 'Weekly Payout Batch cleared and scheduled for instant NACH dispatch!';
-    } else if (actionType === 'kyc') {
-      msg = 'KYC documentation batch verified and marked complete!';
-    } else if (actionType === 'report') {
-      msg = 'CBSG NBFC Audit & Compliance report compiled and downloaded.';
-    }
-    setFeedbackMessage(msg);
-    setTimeout(() => setFeedbackMessage(''), 5000);
+  const handleExport = () => {
+    setAlertMessage('Generating CBSG Finance portfolio export... download started.');
+    setTimeout(() => setAlertMessage(''), 4000);
+  };
+
+  const handleRefresh = () => {
+    setAlertMessage('Dashboard data synchronized with core NBFC node.');
+    setTimeout(() => setAlertMessage(''), 3000);
   };
 
   return (
-    <DashboardLayout pageTitle="Dashboard">
-      {/* Alert / Feedback Notification */}
-      {feedbackMessage && (
-        <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium flex items-center justify-between shadow-xs animate-fadeIn">
-          <div className="flex items-center gap-2.5">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <span>{feedbackMessage}</span>
+    <DashboardLayout>
+      {/* 1. Signed in status notification banner */}
+      {showSignedInAlert && (
+        <div className="mb-4 py-2 px-3.5 bg-white/70 border border-[#e8e2d5] rounded-xl flex items-center justify-between text-xs text-[#2c1b15] shadow-2xs animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-[10px] font-bold">
+              ✓
+            </span>
+            <span className="font-medium">Signed in</span>
           </div>
           <button
             type="button"
-            onClick={() => setFeedbackMessage('')}
-            className="text-emerald-700 hover:text-emerald-900 cursor-pointer"
+            onClick={() => setShowSignedInAlert(false)}
+            className="text-[#968a80] hover:text-[#2c1b15] p-1 cursor-pointer"
+            aria-label="Dismiss signed in alert"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
-      {/* 1. Welcome Message & Workspace Subtitle */}
-      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Global alert toast */}
+      {alertMessage && (
+        <div className="mb-4 py-2.5 px-4 bg-[#e7f7ed] border border-emerald-200 text-emerald-900 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs">
+          <span>{alertMessage}</span>
+          <button
+            type="button"
+            onClick={() => setAlertMessage('')}
+            className="text-emerald-800 hover:text-emerald-950 ml-2"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* 2. Page Header: Title, Subtitle and Top Actions */}
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-            Welcome back!
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#241814]">
+            Performance Overview
           </h2>
-          <p className="mt-1 text-sm sm:text-base text-slate-500">
-            Here's what's happening with your workspace today.
+          <p className="mt-0.5 text-xs text-[#7a6e67]">
+            Collections, growth and portfolio insights — all in one place
           </p>
         </div>
 
-        {/* Workspace Operations Badge */}
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs text-xs font-medium text-slate-700">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Core NBFC Node: Online</span>
-          </div>
-          <Button
-            variant="blue"
-            size="md"
-            icon={Plus}
-            onClick={() => setActionModal('loan')}
-            className="rounded-xl"
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Refresh Button */}
+          <button
+            type="button"
+            onClick={handleRefresh}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#ded8cb] text-xs font-medium text-[#2c1b15] hover:bg-[#f6f2e9] transition-colors shadow-2xs cursor-pointer select-none"
           >
-            New Application
-          </Button>
+            <RotateCcw className="w-3 h-3 text-[#7a6e67]" />
+            <span>Refresh</span>
+          </button>
+
+          {/* Reports Button */}
+          <button
+            type="button"
+            onClick={() => setActiveModal('details')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#ded8cb] text-xs font-medium text-[#2c1b15] hover:bg-[#f6f2e9] transition-colors shadow-2xs cursor-pointer select-none"
+          >
+            <Sliders className="w-3 h-3 text-[#7a6e67]" />
+            <span>Reports</span>
+          </button>
+
+          {/* Export Data Button */}
+          <button
+            type="button"
+            onClick={handleExport}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#2c1b15] hover:bg-[#1a0f0b] text-white text-xs font-medium transition-colors shadow-2xs cursor-pointer select-none"
+          >
+            <Download className="w-3 h-3" />
+            <span>Export data</span>
+          </button>
         </div>
       </div>
 
-      {/* 2. Four Statistics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-        {data.stats.map((stat) => (
-          <StatsCard
-            key={stat.id}
-            title={stat.title}
-            count={stat.count}
-            change={stat.change}
-            isPositive={stat.isPositive}
-            trend={stat.trend}
-            subtitle={stat.subtitle}
-            color={stat.color}
-            iconName={stat.iconName}
-          />
-        ))}
-      </div>
-
-      {/* 3. Main Chart & Task Overview Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Disbursements Chart (2 cols on large screen) */}
-        <div className="lg:col-span-2">
-          <DashboardChart chartData={data.chartData} />
-        </div>
-
-        {/* Task Overview Section (1 col) */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="font-bold text-slate-900 text-base">Task Overview</h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Maker-checker verification queue
-                </p>
-              </div>
-              <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                4 Active
-              </span>
+      {/* 3. Main Dashboard Grid (2 Columns) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* ================= LEFT COLUMN (approx 5 cols on lg) ================= */}
+        <div className="lg:col-span-5 space-y-5">
+          {/* Hero Gradient Card: "Explore your performance" */}
+          <div className="relative overflow-hidden rounded-2xl p-6 bg-gradient-to-br from-[#f8d474] via-[#f7bc45] to-[#e89b25] shadow-xs select-none">
+            {/* Top Tag */}
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#2c1b15]/90 mb-3">
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>{data.hero.tag}</span>
             </div>
 
-            <div className="space-y-4">
-              {data.taskOverview.map((task) => (
+            {/* Big Headline */}
+            <h3 className="text-2xl sm:text-3xl font-medium text-[#2c1b15] tracking-tight leading-tight">
+              {data.hero.title} <br />
+              <span className="italic font-serif font-normal text-2xl sm:text-3xl">
+                {data.hero.titleEmphasis}
+              </span>
+            </h3>
+
+            {/* Organization Name */}
+            <p className="mt-1 text-xs text-[#2c1b15]/80 font-medium">
+              {data.hero.organization}
+            </p>
+
+            {/* Bottom Deposit Book Value */}
+            <div className="mt-8 flex items-baseline justify-between pt-2">
+              <span className="text-xs text-[#2c1b15]/85 font-medium">
+                {data.hero.depositBookLabel}
+              </span>
+              <span className="text-2xl sm:text-3xl font-extrabold text-[#2c1b15] tracking-tight">
+                {data.hero.depositBookValue}
+              </span>
+            </div>
+          </div>
+
+          {/* Portfolio Performance Card */}
+          <div className="bg-white rounded-2xl border border-[#e8e2d5] p-5 shadow-2xs">
+            <h4 className="text-sm font-bold text-[#2c1b15] mb-4">
+              Portfolio performance
+            </h4>
+
+            {/* Table Header */}
+            <div className="grid grid-cols-12 pb-2 text-[10.5px] font-semibold uppercase tracking-wider text-[#968a80] border-b border-[#f3efe6]">
+              <span className="col-span-6">INDICATOR</span>
+              <span className="col-span-3">VALUE</span>
+              <span className="col-span-3 text-right">STATUS</span>
+            </div>
+
+            {/* Table Rows */}
+            <div className="divide-y divide-[#f5f1e8]">
+              {data.portfolioPerformance.map((item) => (
                 <div
-                  key={task.id}
-                  className="p-3.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:border-slate-200 transition-all"
+                  key={item.id}
+                  className="grid grid-cols-12 py-3 text-xs items-center"
                 >
-                  <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <p className="text-xs font-bold text-slate-900 leading-snug">
-                      {task.title}
-                    </p>
+                  <span className="col-span-6 font-medium text-[#2c1b15]">
+                    {item.indicator}
+                  </span>
+                  <span className="col-span-3 font-bold text-[#2c1b15]">
+                    {item.value}
+                  </span>
+                  <div className="col-span-3 text-right">
                     <span
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded border shrink-0 ${task.badgeClass}`}
+                      className={`inline-block px-2 py-0.5 rounded-full text-[10.5px] font-semibold ${
+                        item.statusVariant === 'success'
+                          ? 'bg-[#e7f7ed] text-[#0f7642]'
+                          : 'bg-[#fef1db] text-[#b46500]'
+                      }`}
                     >
-                      {task.priority}
+                      {item.status}
                     </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 mb-2">
-                    <span>{task.category}</span>
-                    <span className="font-semibold text-slate-700">
-                      {task.pendingCount} pending
-                    </span>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
-                    <div
-                      className="bg-blue-600 h-1.5 rounded-full transition-all duration-500"
-                      style={{ width: `${task.progress}%` }}
-                    />
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-between text-[10px] text-slate-600">
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-slate-600" />
-                      {task.due}
-                    </span>
-                    <span className="font-bold text-slate-700">{task.progress}% done</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={() => setActionModal('payout')}
-              className="w-full py-2 px-3 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100/70 rounded-xl transition-colors cursor-pointer text-center block"
-            >
-              Review all pending approvals →
-            </button>
-          </div>
-        </div>
-      </div>
+          {/* Goal progress Card */}
+          <div className="bg-white rounded-2xl border border-[#e8e2d5] p-5 shadow-2xs">
+            <div className="text-[10.5px] font-bold text-[#8a7e75] uppercase tracking-wider mb-2">
+              Goal progress
+            </div>
 
-      {/* 4. Quick Actions Row */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="font-bold text-slate-900 text-lg">Quick Actions</h3>
-            <p className="text-xs text-slate-500">
-              Frequently accessed NBFC maker-checker workflows
+            <div className="flex items-baseline mb-3">
+              <span className="text-2xl sm:text-3xl font-extrabold text-[#2c1b15]">
+                {data.goalProgress.percentage}%
+              </span>
+              <span className="text-xs text-[#7a6e67] ml-2">
+                {data.goalProgress.label}
+              </span>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full bg-[#eee9df] rounded-full h-1.5 overflow-hidden">
+              <div
+                className="bg-[#c88a29] h-1.5 rounded-full transition-all duration-700"
+                style={{ width: `${data.goalProgress.percentage}%` }}
+              />
+            </div>
+
+            <p className="mt-3 text-[11px] text-[#8a7e75]">
+              {data.goalProgress.missedWeeks} missed weeks ·{' '}
+              {data.goalProgress.scheduledInstalments} scheduled instalments
             </p>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Action 1: New Loan Application */}
-          <button
-            type="button"
-            onClick={() => setActionModal('loan')}
-            className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-blue-300 transition-all text-left flex items-start gap-4 group cursor-pointer"
-          >
-            <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform shrink-0">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                New Loan Application
-              </h4>
-              <p className="text-xs text-slate-500 mt-1">
-                Initiate applicant appraisal & risk scoring
-              </p>
-            </div>
-          </button>
+          {/* Operations Overview Card */}
+          <div className="bg-white rounded-2xl border border-[#e8e2d5] p-5 shadow-2xs">
+            <h4 className="text-xs font-bold text-[#8a7e75] uppercase tracking-wider mb-3">
+              Operations overview
+            </h4>
 
-          {/* Action 2: Approve Payout */}
-          <button
-            type="button"
-            onClick={() => setActionModal('payout')}
-            className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-emerald-300 transition-all text-left flex items-start gap-4 group cursor-pointer"
-          >
-            <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform shrink-0">
-              <CreditCard className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900 group-hover:text-emerald-600 transition-colors">
-                Approve Payout
-              </h4>
-              <p className="text-xs text-slate-500 mt-1">
-                Authorize NACH and IMPS disbursements
-              </p>
-            </div>
-          </button>
-
-          {/* Action 3: Review KYC */}
-          <button
-            type="button"
-            onClick={() => setActionModal('kyc')}
-            className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-amber-300 transition-all text-left flex items-start gap-4 group cursor-pointer"
-          >
-            <div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform shrink-0">
-              <UserCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900 group-hover:text-amber-600 transition-colors">
-                Review KYC
-              </h4>
-              <p className="text-xs text-slate-500 mt-1">
-                Verify Aadhaar, PAN & CIBIL documents
-              </p>
-            </div>
-          </button>
-
-          {/* Action 4: Generate Audit Report */}
-          <button
-            type="button"
-            onClick={() => setActionModal('report')}
-            className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all text-left flex items-start gap-4 group cursor-pointer"
-          >
-            <div className="w-11 h-11 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform shrink-0">
-              <Download className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
-                Generate Audit Report
-              </h4>
-              <p className="text-xs text-slate-500 mt-1">
-                Export RBI compliant balance & risk sheets
-              </p>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* 5. Recent Activities & Recent Users 2-Column Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activities Section */}
-        <RecentActivity activities={data.recentActivities} />
-
-        {/* Recent Users Section */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-slate-900 text-base">Recent Users</h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Newly registered borrowers and depositors
-              </p>
-            </div>
-            <span className="text-xs font-semibold text-slate-500">
-              5 of 18,420
-            </span>
-          </div>
-
-          <div className="divide-y divide-slate-100 overflow-x-auto">
-            {data.recentUsers.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 hover:bg-slate-50/70 transition-colors flex items-center justify-between gap-4"
-              >
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <img
-                    src={item.avatar}
-                    alt={item.name}
-                    className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
-                  />
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-900 truncate">
-                      {item.name}
-                    </p>
-                    <p className="text-xs text-slate-500 truncate">{item.email}</p>
-                    <p className="text-[11px] text-slate-600 mt-0.5">
-                      {item.type} · <span className="font-mono">{item.branch}</span>
-                    </p>
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <span className="text-xs font-bold text-slate-900 block font-mono">
-                    {item.amount}
-                  </span>
-                  <span
-                    className={`inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                      item.status === 'Active'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                        : item.status === 'Under Review'
-                        ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
-                        : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {item.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="p-3 bg-slate-50/50 border-t border-slate-100 text-center">
-            <button
-              type="button"
-              className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors inline-flex items-center gap-1 cursor-pointer"
-            >
-              <span>View full customer & staff database</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Interactive Action Modals */}
-      {actionModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <h3 className="font-bold text-slate-900 text-lg">
-                {actionModal === 'loan' && 'New Loan Application'}
-                {actionModal === 'payout' && 'Confirm Payout Approval'}
-                {actionModal === 'kyc' && 'Review KYC Queue'}
-                {actionModal === 'report' && 'Generate Compliance Report'}
-              </h3>
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setActionModal(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                onClick={() => setActiveModal('kyc')}
+                className="py-2.5 px-3 rounded-xl bg-[#f8f5ee] hover:bg-[#eee8dc] border border-[#e8e2d5] text-xs font-bold text-[#2c1b15] text-center transition-colors cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                {data.operationsOverview.pendingKyc} KYC pending
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveModal('approvals')}
+                className="py-2.5 px-3 rounded-xl bg-[#f8f5ee] hover:bg-[#eee8dc] border border-[#e8e2d5] text-xs font-bold text-[#2c1b15] text-center transition-colors cursor-pointer"
+              >
+                {data.operationsOverview.approvals} approvals
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ================= RIGHT COLUMN (approx 7 cols on lg) ================= */}
+        <div className="lg:col-span-7 space-y-5">
+          {/* Collection Trends Card */}
+          <div className="bg-white rounded-2xl border border-[#e8e2d5] p-5 shadow-2xs">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-bold text-[#2c1b15]">
+                Collection trends
+              </h4>
+
+              <button
+                type="button"
+                onClick={() => setActiveModal('details')}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#e8e2d5] text-[11px] font-medium text-[#2c1b15] hover:bg-[#f8f5ee] transition-colors cursor-pointer select-none"
+              >
+                <SlidersHorizontal className="w-3 h-3 text-[#7a6e67]" />
+                <span>Details</span>
               </button>
             </div>
 
-            <div className="py-4 text-sm text-slate-600 leading-relaxed">
-              {actionModal === 'loan' && (
-                <div>
-                  <p className="mb-3">
-                    Start a new customer application under maker appraisal with automated CIBIL and NBFC risk scoring.
-                  </p>
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
-                    <div><strong>Applicant:</strong> M/s Sharma Logistics</div>
-                    <div><strong>Proposed Facility:</strong> ₹25,00,000 Working Capital</div>
-                    <div><strong>Checker Officer:</strong> Sanjay Kumar (Desk 01)</div>
+            {/* Metric Display */}
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl font-extrabold text-[#2c1b15]">
+                {data.collectionTrends.todayAmount}
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-[#e7f7ed] text-[#0f7642]">
+                Today
+              </span>
+              <span className="text-xs text-[#7a6e67] ml-1">
+                {data.collectionTrends.todayLabel}
+              </span>
+            </div>
+
+            {/* High-Fidelity SVG Curve Chart */}
+            <CollectionTrendsChart data={data.collectionTrends} />
+          </div>
+
+          {/* Live Transactions Card */}
+          <div className="bg-white rounded-2xl border border-[#e8e2d5] p-5 shadow-2xs">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-bold text-[#2c1b15]">
+                Live transactions
+              </h4>
+
+              <button
+                type="button"
+                onClick={() => setActiveModal('details')}
+                className="text-xs text-[#7a6e67] hover:text-[#2c1b15] font-medium cursor-pointer"
+              >
+                View all
+              </button>
+            </div>
+
+            {/* Transactions Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-[#f3efe6] text-[10.5px] uppercase tracking-wider text-[#968a80]">
+                    <th className="pb-2 font-semibold">TIME</th>
+                    <th className="pb-2 font-semibold">CUSTOMER</th>
+                    <th className="pb-2 font-semibold">TYPE</th>
+                    <th className="pb-2 font-semibold">BY</th>
+                    <th className="pb-2 font-semibold">AMOUNT</th>
+                    <th className="pb-2 font-semibold text-right">STATUS</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#f5f1e8]">
+                  {data.liveTransactions.map((tx) => (
+                    <tr key={tx.id} className="hover:bg-[#faf7f0]/60 transition-colors">
+                      <td className="py-2.5 text-[#7a6e67] font-mono text-[11px] whitespace-nowrap">
+                        {tx.time}
+                      </td>
+                      <td className="py-2.5 font-bold text-[#2c1b15] whitespace-nowrap">
+                        {tx.customer}
+                      </td>
+                      <td className="py-2.5 text-[#5e5148] whitespace-nowrap">
+                        {tx.type}
+                      </td>
+                      <td className="py-2.5 text-[#5e5148] whitespace-nowrap">
+                        {tx.by}
+                      </td>
+                      <td className="py-2.5 font-bold text-[#2c1b15] font-mono whitespace-nowrap">
+                        {tx.amount}
+                      </td>
+                      <td className="py-2.5 text-right whitespace-nowrap">
+                        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#e7f7ed] text-[#0f7642]">
+                          {tx.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Top Executives Card */}
+          <div className="bg-white rounded-2xl border border-[#e8e2d5] p-5 shadow-2xs">
+            <h4 className="text-sm font-bold text-[#2c1b15] mb-3">
+              Top executives
+            </h4>
+
+            {/* Executives Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-[#f3efe6] text-[10.5px] uppercase tracking-wider text-[#968a80]">
+                    <th className="pb-2 font-semibold">EXECUTIVE</th>
+                    <th className="pb-2 font-semibold">CUSTOMERS</th>
+                    <th className="pb-2 font-semibold">COLLECTED TODAY</th>
+                    <th className="pb-2 font-semibold text-right">TREND</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#f5f1e8]">
+                  {data.topExecutives.map((exec) => (
+                    <tr key={exec.id} className="hover:bg-[#faf7f0]/60 transition-colors">
+                      <td className="py-2.5 flex items-center gap-2.5">
+                        <img
+                          src={exec.avatar}
+                          alt={exec.name}
+                          className="w-7 h-7 rounded-full object-cover border border-[#e0d9cb]"
+                        />
+                        <div>
+                          <p className="font-bold text-[#2c1b15] leading-tight text-xs">
+                            {exec.name}
+                          </p>
+                          <p className="text-[10px] text-[#85786f]">
+                            {exec.role}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="py-2.5 font-bold text-[#2c1b15]">
+                        {exec.customers}
+                      </td>
+                      <td className="py-2.5 font-bold text-[#2c1b15] font-mono">
+                        {exec.collectedToday}
+                      </td>
+                      <td className="py-2.5 text-right">
+                        {/* Mini Sparkline SVG */}
+                        <div className="inline-flex items-center justify-end">
+                          <svg className="w-12 h-4 text-[#c88a29]" viewBox="0 0 48 16" fill="none">
+                            <path
+                              d="M 2 12 Q 14 13, 24 9 T 46 3"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Interactive Modal Dialogs */}
+      {activeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#ded8cb]">
+            <div className="flex items-center justify-between pb-3 border-b border-[#f0ebdF]">
+              <h3 className="font-bold text-sm text-[#2c1b15]">
+                {activeModal === 'kyc' && 'Pending KYC Applications (2)'}
+                {activeModal === 'approvals' && 'Pending Maker-Checker Approvals (1)'}
+                {activeModal === 'details' && 'Full Portfolio Reports'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="p-1 rounded-lg text-stone-400 hover:text-stone-700 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="py-4 text-xs text-[#5e5148] space-y-3">
+              {activeModal === 'kyc' && (
+                <>
+                  <p>The following customers have submitted identity documents awaiting verification:</p>
+                  <div className="p-3 bg-[#faf8f4] rounded-xl border border-[#e8e2d5] space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-[#2c1b15]">1. Rajesh Sen (Aadhaar + PAN)</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#fef1db] text-[#b46500]">Pending</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-[#2c1b15]">2. Sunita Rao (Bank Passbook)</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#fef1db] text-[#b46500]">Pending</span>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
-              {actionModal === 'payout' && (
-                <div>
-                  <p className="mb-3">
-                    Verify and authorize batch #4893 for 42 beneficiaries through the RBI NEFT/NACH gateway.
-                  </p>
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
-                    <strong>Total Amount:</strong> ₹64,20,000 across 42 accounts
+              {activeModal === 'approvals' && (
+                <>
+                  <p>Pending authorization in the maker-checker desk:</p>
+                  <div className="p-3 bg-[#faf8f4] rounded-xl border border-[#e8e2d5]">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-bold text-[#2c1b15]">Weekly Incentive Batch #489</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#fef1db] text-[#b46500]">Review</span>
+                    </div>
+                    <p className="text-[11px] text-[#7a6e67]">Amount: ₹10,605 across 4 staff officers</p>
                   </div>
-                </div>
+                </>
               )}
 
-              {actionModal === 'kyc' && (
-                <div>
-                  <p className="mb-3">
-                    Run bulk automated verification across 16 pending Aadhaar & PAN KYC documents.
-                  </p>
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900">
-                    UIDAI & NSDL API Integration: <strong>Connected & Active</strong>
+              {activeModal === 'details' && (
+                <>
+                  <p>Comprehensive ledger, collection daybook, and executive performance metrics are active and updated real-time.</p>
+                  <div className="p-3 bg-[#f8f5ee] rounded-xl border border-[#e8e2d5] text-[11px] space-y-1">
+                    <div>Deposit Book: <strong>₹7.72 Lakhs</strong></div>
+                    <div>Active Customers: <strong>13</strong></div>
+                    <div>Collection Efficiency: <strong>96.9%</strong></div>
                   </div>
-                </div>
-              )}
-
-              {actionModal === 'report' && (
-                <div>
-                  <p className="mb-3">
-                    Export comprehensive RBI quarterly audit report containing all loans, disbursements, and maker-checker audit trails.
-                  </p>
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
-                    <div><strong>Format:</strong> PDF + Encrypted CSV</div>
-                    <div><strong>Standard:</strong> RBI NBFC Master Directions 2026</div>
-                  </div>
-                </div>
+                </>
               )}
             </div>
 
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-              <Button
-                variant="secondary"
-                size="md"
-                onClick={() => setActionModal(null)}
+            <div className="pt-3 border-t border-[#f0ebdF] flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="px-3 py-1.5 rounded-xl border border-[#ded8cb] text-xs font-semibold text-[#2c1b15] hover:bg-[#faf8f4] cursor-pointer"
               >
-                Cancel
-              </Button>
-              <Button
-                variant="blue"
-                size="md"
-                onClick={() => handleActionExecute(actionModal)}
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveModal(null);
+                  setAlertMessage('Action processed successfully.');
+                  setTimeout(() => setAlertMessage(''), 3000);
+                }}
+                className="px-3.5 py-1.5 rounded-xl bg-[#2c1b15] text-white text-xs font-semibold hover:bg-[#1a0f0b] cursor-pointer"
               >
-                Confirm & Proceed
-              </Button>
+                Acknowledge
+              </button>
             </div>
           </div>
         </div>
