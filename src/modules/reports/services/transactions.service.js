@@ -421,3 +421,4 @@ export const transactionsService = {
   getTransactions: () => JSON.parse(JSON.stringify(INITIAL_TRANSACTIONS)),
   getTotalCount: () => INITIAL_TRANSACTIONS.length,
 };
+

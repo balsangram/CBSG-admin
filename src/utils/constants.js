@@ -34,6 +34,7 @@ export const ROUTES = {
   REPORTS: '/reports',
   REPORTS_ANALYTICS: '/reports-analytics',
   TRANSACTION_LOGS: '/transaction-logs',
+  BRANCHES: '/branches',
   PROFILE: '/profile',
   SETTINGS: '/settings',
 };

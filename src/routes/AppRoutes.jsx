@@ -14,6 +14,7 @@ import IncentiveLedgerPage from '../modules/team/pages/IncentiveLedgerPage';
 import PayoutManagementPage from '../modules/team/pages/PayoutManagementPage';
 import ReportsPage from '../modules/reports/pages/ReportsPage';
 import TransactionLogsPage from '../modules/reports/pages/TransactionLogsPage';
+import BranchesPage from '../modules/admin/pages/BranchesPage';
 import ProfilePage from '../modules/dashboard/pages/ProfilePage';
 import SettingsPage from '../modules/dashboard/pages/SettingsPage';
 import ProtectedRoute from '../components/common/ProtectedRoute';
@@ -188,6 +189,16 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <TransactionLogsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected Branches */}
+      <Route
+        path={ROUTES.BRANCHES}
+        element={
+          <ProtectedRoute>
+            <BranchesPage />
           </ProtectedRoute>
         }
       />

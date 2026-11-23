@@ -75,7 +75,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, collapsed = false }) {
     {
       group: 'Administration',
       items: [
-        { name: 'Branches', icon: Store, path: '#branches', badge: null },
+        { name: 'Branches', icon: Store, path: ROUTES.BRANCHES, badge: null, isNavLink: true },
         { name: 'Users & roles', icon: UserCog, path: '#users-roles', badge: null },
         { name: 'Audit log', icon: Clock, path: '#audit-log', badge: null },
       ],

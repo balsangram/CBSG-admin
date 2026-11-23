@@ -136,3 +136,4 @@ export function TransactionDetailModal({ tx, isOpen, onClose }) {
 }
 
 export default TransactionDetailModal;
+
