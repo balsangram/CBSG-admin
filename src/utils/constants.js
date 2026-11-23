@@ -29,6 +29,7 @@ export const ROUTES = {
   DEPOSIT_ACCOUNTS: '/deposit-accounts',
   DAYBOOK: '/daybook',
   TEAM_STRUCTURE: '/team-structure',
+  INCENTIVE_LEDGER: '/incentive-ledger',
   PROFILE: '/profile',
   SETTINGS: '/settings',
 };
