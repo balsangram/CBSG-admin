@@ -15,6 +15,8 @@ import PayoutManagementPage from '../modules/team/pages/PayoutManagementPage';
 import ReportsPage from '../modules/reports/pages/ReportsPage';
 import TransactionLogsPage from '../modules/reports/pages/TransactionLogsPage';
 import BranchesPage from '../modules/admin/pages/BranchesPage';
+import UsersRolesPage from '../modules/admin/pages/UsersRolesPage';
+import AuditLogPage from '../modules/admin/pages/AuditLogPage';
 import ProfilePage from '../modules/dashboard/pages/ProfilePage';
 import SettingsPage from '../modules/dashboard/pages/SettingsPage';
 import ProtectedRoute from '../components/common/ProtectedRoute';
@@ -199,6 +201,26 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <BranchesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected Users & Roles */}
+      <Route
+        path={ROUTES.USERS_ROLES}
+        element={
+          <ProtectedRoute>
+            <UsersRolesPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected Audit Log */}
+      <Route
+        path={ROUTES.AUDIT_LOG}
+        element={
+          <ProtectedRoute>
+            <AuditLogPage />
           </ProtectedRoute>
         }
       />

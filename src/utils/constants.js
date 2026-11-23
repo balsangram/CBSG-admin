@@ -35,6 +35,8 @@ export const ROUTES = {
   REPORTS_ANALYTICS: '/reports-analytics',
   TRANSACTION_LOGS: '/transaction-logs',
   BRANCHES: '/branches',
+  USERS_ROLES: '/users-roles',
+  AUDIT_LOG: '/audit-log',
   PROFILE: '/profile',
   SETTINGS: '/settings',
 };
