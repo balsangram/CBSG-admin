@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Search,
   X,
@@ -6,14 +7,15 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
-import KycReviewModal from '../components/KycReviewModal';
+import DataTable from '../../../components/common/DataTable';
 import { mockKycQueueData, kycService } from '../services/kyc.service';
+import { ROUTES } from '../../../utils/constants';
 
 export function KycQueuePage() {
+  const navigate = useNavigate();
   const [records, setRecords] = useState(mockKycQueueData);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All'); // 'All', 'Approved', 'Rejected', 'Pending'
-  const [selectedRecord, setSelectedRecord] = useState(null);
   const [showSignedInAlert, setShowSignedInAlert] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
 
@@ -46,7 +48,6 @@ export function KycQueuePage() {
         r.id === id ? { ...r, kycStatus: 'Approved', reviewReason: '—' } : r
       )
     );
-    setSelectedRecord(null);
     setToastMessage('Customer KYC approved and signed off by Maker-Checker.');
     setTimeout(() => setToastMessage(''), 4000);
   };
@@ -58,10 +59,89 @@ export function KycQueuePage() {
         r.id === id ? { ...r, kycStatus: 'Rejected', reviewReason: reason } : r
       )
     );
-    setSelectedRecord(null);
     setToastMessage('KYC status updated to Rejected with review reason.');
     setTimeout(() => setToastMessage(''), 4000);
   };
+
+  // Navigate to the KYC review page with the record
+  const openReview = (rec) => {
+    navigate(ROUTES.KYC_REVIEW, { state: { record: rec } });
+  };
+
+  const columns = [
+    {
+      key: 'customer',
+      header: 'Customer',
+      headerClassName: 'pl-5 pr-3',
+      cellClassName: 'pl-5 pr-3',
+      render: (rec) => (
+        <div className="flex items-center gap-3">
+          <img
+            src={rec.avatar}
+            alt={rec.customer}
+            className="w-8 h-8 rounded-full object-cover border border-[#e0d9cb] shrink-0"
+          />
+          <span className="font-bold text-[#2c1b15]">{rec.customer}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'phone',
+      header: 'Phone',
+      cellClassName: 'text-[#5e5148] font-mono text-[11.5px] whitespace-nowrap',
+    },
+    {
+      key: 'branch',
+      header: 'Branch',
+      cellClassName: 'text-[#5e5148] whitespace-nowrap',
+    },
+    {
+      key: 'kycStatus',
+      header: 'KYC Status',
+      cellClassName: 'whitespace-nowrap',
+      render: (rec) => (
+        <span
+          className={`inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold ${
+            rec.kycStatus === 'Approved'
+              ? 'bg-[#e7f7ed] text-[#0f7642]'
+              : rec.kycStatus === 'Rejected'
+              ? 'bg-[#fee2e2] text-[#b91c1c]'
+              : 'bg-[#fef1db] text-[#b46500]'
+          }`}
+        >
+          {rec.kycStatus}
+        </span>
+      ),
+    },
+    {
+      key: 'reviewReason',
+      header: 'Review Reason',
+      cellClassName: 'text-[#5e5148] max-w-xs truncate',
+      render: (rec) => (
+        <span title={rec.reviewReason}>{rec.reviewReason}</span>
+      ),
+    },
+    {
+      key: 'action',
+      header: 'Action',
+      headerClassName: 'pr-5 pl-2 text-right',
+      cellClassName: 'pr-5 pl-2 text-right whitespace-nowrap',
+      align: 'right',
+      render: (rec) => (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            openReview(rec);
+          }}
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#ded8cb] text-xs font-semibold text-[#2c1b15] hover:bg-[#faf7f0] transition-colors cursor-pointer select-none"
+        >
+          <Eye className="w-3 h-3 text-[#7a6e67]" />
+          <span>View KYC</span>
+        </button>
+      ),
+    },
+  ];
 
   return (
     <DashboardLayout>
@@ -190,104 +270,12 @@ export function KycQueuePage() {
       </div>
 
       {/* 5. KYC Approval Queue Table */}
-      <div className="bg-white rounded-2xl border border-[#e8e2d5] shadow-2xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-[#f3efe6] text-[10.5px] uppercase tracking-wider text-[#968a80]">
-                <th className="py-3.5 pl-5 pr-3 font-semibold">CUSTOMER</th>
-                <th className="py-3.5 px-3 font-semibold">PHONE</th>
-                <th className="py-3.5 px-3 font-semibold">BRANCH</th>
-                <th className="py-3.5 px-3 font-semibold">KYC STATUS</th>
-                <th className="py-3.5 px-3 font-semibold">REVIEW REASON</th>
-                <th className="py-3.5 pr-5 pl-2 font-semibold text-right">ACTION</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#f5f1e8]">
-              {filteredRecords.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-xs text-[#8a7e75]">
-                    No KYC records match your criteria.
-                  </td>
-                </tr>
-              ) : (
-                filteredRecords.map((rec) => (
-                  <tr
-                    key={rec.id}
-                    className="hover:bg-[#faf7f0]/60 transition-colors"
-                  >
-                    {/* CUSTOMER */}
-                    <td className="py-3.5 pl-5 pr-3">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={rec.avatar}
-                          alt={rec.customer}
-                          className="w-8 h-8 rounded-full object-cover border border-[#e0d9cb] shrink-0"
-                        />
-                        <span className="font-bold text-[#2c1b15]">
-                          {rec.customer}
-                        </span>
-                      </div>
-                    </td>
+      <DataTable
+        columns={columns}
+        data={filteredRecords}
+        emptyMessage="No KYC records match your criteria."
+      />
 
-                    {/* PHONE */}
-                    <td className="py-3.5 px-3 text-[#5e5148] font-mono text-[11.5px] whitespace-nowrap">
-                      {rec.phone}
-                    </td>
-
-                    {/* BRANCH */}
-                    <td className="py-3.5 px-3 text-[#5e5148] whitespace-nowrap">
-                      {rec.branch}
-                    </td>
-
-                    {/* KYC STATUS */}
-                    <td className="py-3.5 px-3 whitespace-nowrap">
-                      <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold ${
-                          rec.kycStatus === 'Approved'
-                            ? 'bg-[#e7f7ed] text-[#0f7642]'
-                            : rec.kycStatus === 'Rejected'
-                            ? 'bg-[#fee2e2] text-[#b91c1c]'
-                            : 'bg-[#fef1db] text-[#b46500]'
-                        }`}
-                      >
-                        {rec.kycStatus}
-                      </span>
-                    </td>
-
-                    {/* REVIEW REASON */}
-                    <td className="py-3.5 px-3 text-[#5e5148] max-w-xs truncate" title={rec.reviewReason}>
-                      {rec.reviewReason}
-                    </td>
-
-                    {/* ACTION Button */}
-                    <td className="py-3.5 pr-5 pl-2 text-right whitespace-nowrap">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedRecord(rec)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#ded8cb] text-xs font-semibold text-[#2c1b15] hover:bg-[#faf7f0] transition-colors cursor-pointer select-none"
-                      >
-                        <Eye className="w-3 h-3 text-[#7a6e67]" />
-                        <span>View KYC</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* 6. Interactive KYC Review Modal */}
-      {selectedRecord && (
-        <KycReviewModal
-          record={selectedRecord}
-          onClose={() => setSelectedRecord(null)}
-          onApprove={handleApprove}
-          onReject={handleReject}
-        />
-      )}
     </DashboardLayout>
   );
 }

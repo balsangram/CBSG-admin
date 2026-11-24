@@ -116,7 +116,7 @@ export function SignInForm() {
             name="email"
             type="email"
             autoComplete="email"
-            placeholder="Staff email (e.g. sanjay.k@cbsgfinancial.in)"
+            placeholder="Staff email"
             value={formData.email}
             onChange={handleChange}
             error={errors.email}

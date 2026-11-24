@@ -1,3 +1,5 @@
+import { api } from '../../../services/api';
+
 /**
  * KYC Approval Queue Service & Dataset
  * Matches official CBSG Finance Limited KYC Queue Console
@@ -247,6 +249,40 @@ export const kycService = {
       pending,
       total: records.length,
     };
+  },
+
+  // ---- Real backend endpoints (/admin/kyc) ----
+
+  async getKycList(params = {}) {
+    const { data } = await api.get('/admin/kyc', { params });
+    return data?.data;
+  },
+
+  async getKycByCustomer(customerId) {
+    const { data } = await api.get(`/admin/kyc/${customerId}`);
+    return data?.data;
+  },
+
+  async approveSection(customerId, section) {
+    const { data } = await api.patch(
+      `/admin/kyc/${customerId}/sections/${section}/approve`
+    );
+    return data?.data;
+  },
+
+  async rejectSection(customerId, section, payload = {}) {
+    const { data } = await api.patch(
+      `/admin/kyc/${customerId}/sections/${section}/reject`,
+      payload
+    );
+    return data?.data;
+  },
+
+  async rejectAll(customerId, reason) {
+    const { data } = await api.post(`/admin/kyc/${customerId}/reject`, {
+      reason,
+    });
+    return data?.data;
   },
 };
 

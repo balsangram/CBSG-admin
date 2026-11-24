@@ -7,6 +7,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import DataTable from '../../../components/common/DataTable';
 import {
   daybookSummary,
   todayDaybookEntries,
@@ -38,6 +39,68 @@ export function DaybookPage() {
       return matchCust && matchMode;
     });
   }, [passbook, selectedCustomer, selectedMode]);
+
+  const daybookColumns = [
+    { key: 'time', header: 'TIME', headerClassName: 'pl-5 pr-3', cellClassName: 'py-3 pl-5 pr-3' },
+    { key: 'receipt', header: 'RECEIPT', cellClassName: 'py-3 px-3' },
+    { key: 'customer', header: 'CUSTOMER', cellClassName: 'py-3 px-3' },
+    { key: 'account', header: 'ACCOUNT', cellClassName: 'py-3 px-3' },
+    { key: 'mode', header: 'MODE', cellClassName: 'py-3 px-3' },
+    { key: 'savings', header: 'CUSTOMER SAVINGS', cellClassName: 'py-3 px-3' },
+    {
+      key: 'status',
+      header: 'STATUS',
+      headerClassName: 'pr-5 pl-3 text-right',
+      cellClassName: 'py-3 pr-5 pl-3 text-right',
+      align: 'right',
+    },
+  ];
+
+  const passbookColumns = [
+    {
+      key: 'date',
+      header: 'DATE',
+      headerClassName: 'pl-5 pr-3',
+      cellClassName: 'py-3 pl-5 pr-3 text-[#7a6e67] whitespace-nowrap',
+    },
+    {
+      key: 'receipt',
+      header: 'RECEIPT',
+      cellClassName: 'py-3 px-3 font-mono text-[#5e5148] text-[11px] whitespace-nowrap',
+    },
+    {
+      key: 'customer',
+      header: 'CUSTOMER',
+      cellClassName: 'py-3 px-3 font-medium text-[#2c1b15] whitespace-nowrap',
+    },
+    {
+      key: 'account',
+      header: 'ACCOUNT',
+      cellClassName: 'py-3 px-3 font-mono text-[#2c1b15] whitespace-nowrap',
+    },
+    {
+      key: 'mode',
+      header: 'MODE',
+      cellClassName: 'py-3 px-3 text-[#5e5148] whitespace-nowrap',
+    },
+    {
+      key: 'savings',
+      header: 'CUSTOMER SAVINGS',
+      cellClassName: 'py-3 px-3 font-bold text-[#2c1b15] font-mono whitespace-nowrap',
+    },
+    {
+      key: 'status',
+      header: 'STATUS',
+      headerClassName: 'pr-5 pl-3 text-right',
+      cellClassName: 'py-3 pr-5 pl-3 text-right whitespace-nowrap',
+      align: 'right',
+      render: (item) => (
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#e7f7ed] text-[#0f7642]">
+          {item.status}
+        </span>
+      ),
+    },
+  ];
 
   // Export CSV handler
   const handleExport = () => {
@@ -220,43 +283,12 @@ export function DaybookPage() {
       </div>
 
       {/* 5. Today's Daybook Table (Empty State) */}
-      <div className="bg-white rounded-2xl border border-[#e8e2d5] shadow-2xs overflow-hidden mb-8">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-[#f3efe6] text-[10.5px] uppercase tracking-wider text-[#968a80]">
-                <th className="py-3.5 pl-5 pr-3 font-semibold">TIME</th>
-                <th className="py-3.5 px-3 font-semibold">RECEIPT</th>
-                <th className="py-3.5 px-3 font-semibold">CUSTOMER</th>
-                <th className="py-3.5 px-3 font-semibold">ACCOUNT</th>
-                <th className="py-3.5 px-3 font-semibold">MODE</th>
-                <th className="py-3.5 px-3 font-semibold">CUSTOMER SAVINGS</th>
-                <th className="py-3.5 pr-5 pl-3 font-semibold text-right">STATUS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {todayEntries.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-10 text-center text-xs text-[#8a7e75]">
-                    No entries yet today.
-                  </td>
-                </tr>
-              ) : (
-                todayEntries.map((row) => (
-                  <tr key={row.id}>
-                    <td className="py-3 pl-5 pr-3">{row.time}</td>
-                    <td className="py-3 px-3">{row.receipt}</td>
-                    <td className="py-3 px-3">{row.customer}</td>
-                    <td className="py-3 px-3">{row.account}</td>
-                    <td className="py-3 px-3">{row.mode}</td>
-                    <td className="py-3 px-3">{row.savings}</td>
-                    <td className="py-3 pr-5 pl-3 text-right">{row.status}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div className="mb-8">
+        <DataTable
+          columns={daybookColumns}
+          data={todayEntries}
+          emptyMessage="No entries yet today."
+        />
       </div>
 
       {/* 6. Customer Savings Passbook Section */}
@@ -265,73 +297,11 @@ export function DaybookPage() {
           Customer savings passbook
         </h3>
 
-        <div className="bg-white rounded-2xl border border-[#e8e2d5] shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-[#f3efe6] text-[10.5px] uppercase tracking-wider text-[#968a80]">
-                  <th className="py-3.5 pl-5 pr-3 font-semibold">DATE</th>
-                  <th className="py-3.5 px-3 font-semibold">RECEIPT</th>
-                  <th className="py-3.5 px-3 font-semibold">CUSTOMER</th>
-                  <th className="py-3.5 px-3 font-semibold">ACCOUNT</th>
-                  <th className="py-3.5 px-3 font-semibold">MODE</th>
-                  <th className="py-3.5 px-3 font-semibold">CUSTOMER SAVINGS</th>
-                  <th className="py-3.5 pr-5 pl-3 font-semibold text-right">STATUS</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#f5f1e8]">
-                {filteredPassbook.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="py-10 text-center text-xs text-[#8a7e75]">
-                      No passbook records match your filter criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredPassbook.map((item) => (
-                    <tr key={item.id} className="hover:bg-[#faf7f0]/60 transition-colors">
-                      {/* DATE */}
-                      <td className="py-3 pl-5 pr-3 text-[#7a6e67] whitespace-nowrap">
-                        {item.date}
-                      </td>
-
-                      {/* RECEIPT */}
-                      <td className="py-3 px-3 font-mono text-[#5e5148] text-[11px] whitespace-nowrap">
-                        {item.receipt}
-                      </td>
-
-                      {/* CUSTOMER */}
-                      <td className="py-3 px-3 font-medium text-[#2c1b15] whitespace-nowrap">
-                        {item.customer}
-                      </td>
-
-                      {/* ACCOUNT */}
-                      <td className="py-3 px-3 font-mono text-[#2c1b15] whitespace-nowrap">
-                        {item.account}
-                      </td>
-
-                      {/* MODE */}
-                      <td className="py-3 px-3 text-[#5e5148] whitespace-nowrap">
-                        {item.mode}
-                      </td>
-
-                      {/* CUSTOMER SAVINGS */}
-                      <td className="py-3 px-3 font-bold text-[#2c1b15] font-mono whitespace-nowrap">
-                        {item.savings}
-                      </td>
-
-                      {/* STATUS */}
-                      <td className="py-3 pr-5 pl-3 text-right whitespace-nowrap">
-                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#e7f7ed] text-[#0f7642]">
-                          {item.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <DataTable
+          columns={passbookColumns}
+          data={filteredPassbook}
+          emptyMessage="No passbook records match your filter criteria."
+        />
       </div>
     </DashboardLayout>
   );

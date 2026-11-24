@@ -185,8 +185,7 @@ export function Sidebar({ mobileOpen, setMobileOpen, collapsed = false }) {
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-[#6e6158] hover:text-[#2c1b15] hover:bg-white/70 transition-colors select-none"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            {!collapsed && <span>Back to Launcher</span>}
+           
           </a>
         </div>
       </aside>

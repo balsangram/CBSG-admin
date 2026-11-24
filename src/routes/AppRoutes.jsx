@@ -6,6 +6,7 @@ import DashboardPage from '../modules/dashboard/pages/DashboardPage';
 import CustomerRecordsPage from '../modules/customers/pages/CustomerRecordsPage';
 import Customer360Page from '../modules/customers/pages/Customer360Page';
 import KycQueuePage from '../modules/customers/pages/KycQueuePage';
+import KycReviewPage from '../modules/customers/pages/KycReviewPage';
 import SchemeMasterPage from '../modules/savings/pages/SchemeMasterPage';
 import DepositAccountsPage from '../modules/savings/pages/DepositAccountsPage';
 import DaybookPage from '../modules/collections/pages/DaybookPage';
@@ -102,6 +103,16 @@ export function AppRoutes() {
         element={
           <ProtectedRoute>
             <KycQueuePage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected KYC Review Page */}
+      <Route
+        path={ROUTES.KYC_REVIEW}
+        element={
+          <ProtectedRoute>
+            <KycReviewPage />
           </ProtectedRoute>
         }
       />

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown, Upload, X } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import DataTable from '../../../components/common/DataTable';
 import TransactionDetailModal from '../components/TransactionDetailModal';
 import { transactionsService } from '../services/transactions.service';
 
@@ -39,6 +40,62 @@ export function TransactionLogsPage() {
     link.click();
     document.body.removeChild(link);
   };
+
+  const columns = [
+    {
+      key: 'date',
+      header: 'Date',
+      cellClassName: 'text-[#443831] font-normal whitespace-nowrap',
+    },
+    {
+      key: 'reference',
+      header: 'Reference',
+      cellClassName:
+        'font-medium text-[#2c1b15] font-mono whitespace-nowrap group-hover:text-[#9e6212] transition-colors',
+    },
+    {
+      key: 'customer',
+      header: 'Customer',
+      cellClassName: 'font-normal text-[#2c1b15] whitespace-nowrap',
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      cellClassName: 'text-[#73665c] font-normal whitespace-nowrap',
+    },
+    {
+      key: 'mode',
+      header: 'Mode',
+      cellClassName: 'text-[#443831] font-normal whitespace-nowrap',
+    },
+    {
+      key: 'channel',
+      header: 'Channel',
+      cellClassName: 'text-[#73665c] font-normal whitespace-nowrap',
+    },
+    {
+      key: 'amount',
+      header: 'Amount',
+      cellClassName: 'font-semibold text-[#2c1b15] whitespace-nowrap',
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      align: 'center',
+      cellClassName: 'text-center whitespace-nowrap',
+      render: (tx) => (
+        <span
+          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
+            tx.status === 'Success'
+              ? 'bg-[#e7f7ed] text-[#0d7a3e] border border-[#c3eed4]'
+              : 'bg-[#fef4e6] text-[#b86200] border border-[#fde4c4]'
+          }`}
+        >
+          {tx.status}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <DashboardLayout>
@@ -141,87 +198,14 @@ export function TransactionLogsPage() {
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-[#f0eae0] text-[10.5px] uppercase tracking-wider text-[#8f8278] font-bold">
-                  <th className="py-3 px-4 font-semibold">Date</th>
-                  <th className="py-3 px-4 font-semibold">Reference</th>
-                  <th className="py-3 px-4 font-semibold">Customer</th>
-                  <th className="py-3 px-4 font-semibold">Type</th>
-                  <th className="py-3 px-4 font-semibold">Mode</th>
-                  <th className="py-3 px-4 font-semibold">Channel</th>
-                  <th className="py-3 px-4 font-semibold">Amount</th>
-                  <th className="py-3 px-4 text-center font-semibold">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#f7f2ea] text-xs">
-                {filteredTransactions.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-8 text-center text-xs text-[#8f8278]">
-                      No transaction records found matching current query.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredTransactions.map((tx) => (
-                    <tr
-                      key={tx.id}
-                      onClick={() => setSelectedTx(tx)}
-                      className="hover:bg-[#faf7f2] transition-colors cursor-pointer group"
-                    >
-                      {/* Date */}
-                      <td className="py-3 px-4 text-[#443831] font-normal whitespace-nowrap">
-                        {tx.date}
-                      </td>
-
-                      {/* Reference */}
-                      <td className="py-3 px-4 font-medium text-[#2c1b15] font-mono whitespace-nowrap group-hover:text-[#9e6212] transition-colors">
-                        {tx.reference}
-                      </td>
-
-                      {/* Customer */}
-                      <td className="py-3 px-4 font-normal text-[#2c1b15] whitespace-nowrap">
-                        {tx.customer}
-                      </td>
-
-                      {/* Type */}
-                      <td className="py-3 px-4 text-[#73665c] font-normal whitespace-nowrap">
-                        {tx.type}
-                      </td>
-
-                      {/* Mode */}
-                      <td className="py-3 px-4 text-[#443831] font-normal whitespace-nowrap">
-                        {tx.mode}
-                      </td>
-
-                      {/* Channel */}
-                      <td className="py-3 px-4 text-[#73665c] font-normal whitespace-nowrap">
-                        {tx.channel}
-                      </td>
-
-                      {/* Amount */}
-                      <td className="py-3 px-4 font-semibold text-[#2c1b15] whitespace-nowrap">
-                        {tx.amount}
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                            tx.status === 'Success'
-                              ? 'bg-[#e7f7ed] text-[#0d7a3e] border border-[#c3eed4]'
-                              : 'bg-[#fef4e6] text-[#b86200] border border-[#fde4c4]'
-                          }`}
-                        >
-                          {tx.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            bare
+            columns={columns}
+            data={filteredTransactions}
+            emptyMessage="No transaction records found matching current query."
+            onRowClick={setSelectedTx}
+            rowClassName="group"
+          />
         </div>
 
         {/* Transaction Detail Modal */}

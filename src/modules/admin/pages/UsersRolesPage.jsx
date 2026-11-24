@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import DataTable from '../../../components/common/DataTable';
 import { Users, ShieldCheck, Search, Plus, Edit2, Power } from 'lucide-react';
 import { usersService } from '../services/users.service';
 import CreateUserModal from '../components/CreateUserModal';
@@ -42,6 +43,87 @@ export function UsersRolesPage() {
   const handleToggleStatus = (id) => {
     setUsers((prev) => usersService.toggleStatus(prev, id));
   };
+
+  const columns = [
+    {
+      key: 'user',
+      header: 'Staff User',
+      headerClassName: 'pr-4',
+      cellClassName: 'pr-4',
+      render: (user) => (
+        <div className="flex items-center gap-3">
+          <img
+            src={user.avatar}
+            alt={user.name}
+            className="w-9 h-9 rounded-full object-cover border border-[#e8e2d5]"
+          />
+          <div>
+            <p className="font-bold text-[#2c1b15] leading-tight">{user.name}</p>
+            <p className="text-[11px] text-[#8f8278] font-mono mt-0.5">
+              {user.email}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'role',
+      header: 'Role',
+      cellClassName: 'font-medium text-[#2c1b15]',
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (user) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+            user.status === 'Active'
+              ? 'bg-[#e7f7ed] text-[#0d7a3e]'
+              : 'bg-stone-100 text-stone-600'
+          }`}
+        >
+          {user.status}
+        </span>
+      ),
+    },
+    {
+      key: 'pageAccess',
+      header: 'Page Access',
+      cellClassName:
+        'text-[#61554d] font-medium font-mono text-[11px]',
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      headerClassName: 'pl-4 text-right',
+      cellClassName: 'pl-4 text-right',
+      align: 'right',
+      render: (user) => (
+        <div className="inline-flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setEditingUser(user)}
+            className="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-[#faf7f2] border border-[#e8e2d5] text-[#2c1b15] rounded-lg text-xs font-medium shadow-2xs transition-colors cursor-pointer"
+          >
+            <Edit2 className="w-3 h-3 text-[#7a6e66]" />
+            <span>Edit</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleToggleStatus(user.id)}
+            className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+              user.status === 'Active'
+                ? 'bg-white hover:bg-stone-50 border-[#e8e2d5] text-[#61554d]'
+                : 'bg-[#e7f7ed] hover:bg-[#d5f0de] border-[#c7ebd5] text-[#0d7a3e]'
+            }`}
+          >
+            <Power className="w-3 h-3" />
+            <span>{user.status === 'Active' ? 'Disable' : 'Enable'}</span>
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <DashboardLayout pageTitle="User management & permissions">
@@ -142,99 +224,13 @@ export function UsersRolesPage() {
         </div>
 
         {/* Staff Directory Table */}
-        <div className="bg-white rounded-2xl border border-[#e8e2d5] p-5 shadow-xs overflow-hidden">
+        <div>
           <h2 className="text-sm font-bold text-[#2c1b15] mb-4">Staff directory</h2>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-[#f2ede4] text-[10.5px] font-semibold text-[#8f8278] uppercase tracking-wider">
-                  <th className="pb-3 pr-4">Staff User</th>
-                  <th className="pb-3 px-4">Role</th>
-                  <th className="pb-3 px-4">Status</th>
-                  <th className="pb-3 px-4">Page Access</th>
-                  <th className="pb-3 pl-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#f5f1e9]">
-                {filteredUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="py-8 text-center text-[#8f8278]">
-                      No staff users found matching your criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-[#faf8f4] transition-colors">
-                      {/* Staff User (Avatar + Name + Email) */}
-                      <td className="py-3.5 pr-4">
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={user.avatar}
-                            alt={user.name}
-                            className="w-9 h-9 rounded-full object-cover border border-[#e8e2d5]"
-                          />
-                          <div>
-                            <p className="font-bold text-[#2c1b15] leading-tight">{user.name}</p>
-                            <p className="text-[11px] text-[#8f8278] font-mono mt-0.5">
-                              {user.email}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* Role */}
-                      <td className="py-3.5 px-4 font-medium text-[#2c1b15]">{user.role}</td>
-
-                      {/* Status */}
-                      <td className="py-3.5 px-4">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
-                            user.status === 'Active'
-                              ? 'bg-[#e7f7ed] text-[#0d7a3e]'
-                              : 'bg-stone-100 text-stone-600'
-                          }`}
-                        >
-                          {user.status}
-                        </span>
-                      </td>
-
-                      {/* Page Access */}
-                      <td className="py-3.5 px-4 text-[#61554d] font-medium font-mono text-[11px]">
-                        {user.pageAccess}
-                      </td>
-
-                      {/* Actions */}
-                      <td className="py-3.5 pl-4 text-right">
-                        <div className="inline-flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setEditingUser(user)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-[#faf7f2] border border-[#e8e2d5] text-[#2c1b15] rounded-lg text-xs font-medium shadow-2xs transition-colors cursor-pointer"
-                          >
-                            <Edit2 className="w-3 h-3 text-[#7a6e66]" />
-                            <span>Edit</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleStatus(user.id)}
-                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                              user.status === 'Active'
-                                ? 'bg-white hover:bg-stone-50 border-[#e8e2d5] text-[#61554d]'
-                                : 'bg-[#e7f7ed] hover:bg-[#d5f0de] border-[#c7ebd5] text-[#0d7a3e]'
-                            }`}
-                          >
-                            <Power className="w-3 h-3" />
-                            <span>{user.status === 'Active' ? 'Disable' : 'Enable'}</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <DataTable
+            columns={columns}
+            data={filteredUsers}
+            emptyMessage="No staff users found matching your criteria."
+          />
         </div>
       </div>
 

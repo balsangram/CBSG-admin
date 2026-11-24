@@ -2,8 +2,8 @@ export const APP_CONFIG = {
   APP_NAME: 'CBSG Finance Limited',
   APP_SUBTITLE: 'ADMIN CONSOLE',
   LAUNCHER_URL: 'https://www.cbsg.online/',
-  DEMO_EMAIL: 'sanjay.k@cbsgfinancial.in',
-  DEMO_PASSWORD: 'Password@123',
+  DEMO_EMAIL: 'prajwalanagekar@gmail.com',
+  DEMO_PASSWORD: 'ChangeThisPassword123!',
   DEMO_OTP: '123456',
   DEMO_STAFF_NAME: 'Sanjay Kulkarni',
   DEMO_STAFF_ROLE: 'Super Admin',
@@ -12,9 +12,12 @@ export const APP_CONFIG = {
 
 export const STORAGE_KEYS = {
   AUTH_TOKEN: 'cbsg_auth_token',
+  AUTH_REFRESH_TOKEN: 'cbsg_auth_refresh_token',
   AUTH_USER: 'cbsg_auth_user',
   AUTH_STEP: 'cbsg_auth_step',
   AUTH_IS_AUTHENTICATED: 'cbsg_auth_is_authenticated',
+  AUTH_OTP_ID: 'cbsg_auth_otp_id',
+  AUTH_OTP_EMAIL: 'cbsg_auth_otp_email',
 };
 
 export const ROUTES = {
@@ -25,6 +28,7 @@ export const ROUTES = {
   CUSTOMER_RECORDS: '/customer-records',
   CUSTOMER_360: '/customer-360',
   KYC_QUEUE: '/kyc-queue',
+  KYC_REVIEW: '/kyc-review',
   SCHEME_MASTER: '/scheme-master',
   DEPOSIT_ACCOUNTS: '/deposit-accounts',
   DAYBOOK: '/daybook',

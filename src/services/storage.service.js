@@ -47,7 +47,9 @@ class StorageService {
     const user = this.get(STORAGE_KEYS.AUTH_USER, null);
     const token = this.get(STORAGE_KEYS.AUTH_TOKEN, null);
     const step1Complete = Boolean(this.get(STORAGE_KEYS.AUTH_STEP, false));
-    const isAuthenticated = Boolean(this.get(STORAGE_KEYS.AUTH_IS_AUTHENTICATED, false));
+    const isAuthenticated = Boolean(
+      this.get(STORAGE_KEYS.AUTH_IS_AUTHENTICATED, false)
+    );
 
     return {
       user,
@@ -57,24 +59,43 @@ class StorageService {
     };
   }
 
-  saveStep1Success(user) {
-    this.set(STORAGE_KEYS.AUTH_USER, user);
+  // Step 1 complete: OTP issued, waiting for verification
+  savePendingOtp({ email, otpId, user }) {
+    this.set(STORAGE_KEYS.AUTH_OTP_EMAIL, email);
+    this.set(STORAGE_KEYS.AUTH_OTP_ID, otpId);
+    if (user) this.set(STORAGE_KEYS.AUTH_USER, user);
     this.set(STORAGE_KEYS.AUTH_STEP, true);
     this.set(STORAGE_KEYS.AUTH_IS_AUTHENTICATED, false);
   }
 
-  saveTwoFactorSuccess(token, user) {
-    this.set(STORAGE_KEYS.AUTH_TOKEN, token);
+  getPendingOtp() {
+    return {
+      email: this.get(STORAGE_KEYS.AUTH_OTP_EMAIL, null),
+      otpId: this.get(STORAGE_KEYS.AUTH_OTP_ID, null),
+    };
+  }
+
+  // Step 2 complete: full session established
+  saveSession({ accessToken, refreshToken, user }) {
+    this.set(STORAGE_KEYS.AUTH_TOKEN, accessToken);
+    if (refreshToken) {
+      this.set(STORAGE_KEYS.AUTH_REFRESH_TOKEN, refreshToken);
+    }
     if (user) this.set(STORAGE_KEYS.AUTH_USER, user);
     this.set(STORAGE_KEYS.AUTH_STEP, true);
     this.set(STORAGE_KEYS.AUTH_IS_AUTHENTICATED, true);
+    this.remove(STORAGE_KEYS.AUTH_OTP_ID);
+    this.remove(STORAGE_KEYS.AUTH_OTP_EMAIL);
   }
 
   clearAuthState() {
     this.remove(STORAGE_KEYS.AUTH_TOKEN);
+    this.remove(STORAGE_KEYS.AUTH_REFRESH_TOKEN);
     this.remove(STORAGE_KEYS.AUTH_USER);
     this.remove(STORAGE_KEYS.AUTH_STEP);
     this.remove(STORAGE_KEYS.AUTH_IS_AUTHENTICATED);
+    this.remove(STORAGE_KEYS.AUTH_OTP_ID);
+    this.remove(STORAGE_KEYS.AUTH_OTP_EMAIL);
   }
 }
 

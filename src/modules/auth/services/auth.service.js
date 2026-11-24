@@ -1,61 +1,69 @@
 import { api } from '../../../services/api';
 import storageService from '../../../services/storage.service';
-import { APP_CONFIG } from '../../../utils/constants';
 
 class AuthService {
   /**
    * Step 1: Staff Sign In with Email & Password
+   * POST /auth/admin/login -> { id, email } (OTP record id)
    */
   async signIn(email, password) {
-    // Simulated network API call
-    await api.post('/api/v1/auth/staff-login', { email, password }, 700);
-
-    // Create staff user session object
-    const staffUser = {
-      id: 'usr_cbsg_849201',
-      name: APP_CONFIG.DEMO_STAFF_NAME,
+    const response = await api.post('/auth/admin/login', {
       email: email.trim().toLowerCase(),
-      role: APP_CONFIG.DEMO_STAFF_ROLE,
-      branch: APP_CONFIG.DEMO_STAFF_BRANCH,
-      employeeId: 'CBSG-HQ-0482',
-      department: 'NBFC Credit & Risk Control',
-      securityLevel: 'Maker-Checker Tier 2',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=256&q=80',
+      password,
+    });
+
+    // Backend wraps payloads as { success, message, data }
+    const otp = response.data?.data || {};
+
+    const pendingUser = {
+      email: otp.email,
+      role: 'admin',
     };
 
-    // Save step 1 completion in storage
-    storageService.saveStep1Success(staffUser);
+    storageService.savePendingOtp({
+      email: otp.email,
+      otpId: otp.id,
+      user: pendingUser,
+    });
 
     return {
       success: true,
-      user: staffUser,
+      user: pendingUser,
       step1Complete: true,
-      message: 'Step 1 authenticated. Please verify 2FA.',
+      otpId: otp.id,
+      message: 'OTP sent. Please verify to continue.',
     };
   }
 
   /**
    * Step 2: Two-Factor Verification
+   * POST /auth/admin/verify-otp -> { user, accessToken, refreshToken }
    */
-  async verifyTwoFactor(code, user) {
-    await api.post('/api/v1/auth/2fa-verify', { code }, 600);
+  async verifyTwoFactor(code) {
+    const { email, otpId } = storageService.getPendingOtp();
 
-    const cleaned = (code || '').replace(/\D/g, '');
-
-    // For demo mode, accept only demo OTP '123456'
-    if (cleaned !== APP_CONFIG.DEMO_OTP) {
-      throw new Error(`Invalid verification code. Use demo code ${APP_CONFIG.DEMO_OTP}.`);
+    if (!email || !otpId) {
+      throw new Error('Session expired. Please sign in again.');
     }
 
-    const demoToken = `cbsg_jwt_${Date.now()}_sec74a9`;
+    const response = await api.post('/auth/admin/verify-otp', {
+      email,
+      otp: String(code).replace(/\D/g, ''),
+      id: otpId,
+    });
 
-    // Persist full authentication in storage
-    storageService.saveTwoFactorSuccess(demoToken, user);
+    const session = response.data?.data || {};
+
+    storageService.saveSession({
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+      user: session.user,
+    });
 
     return {
       success: true,
-      token: demoToken,
-      user,
+      token: session.accessToken,
+      user: session.user,
       isAuthenticated: true,
     };
   }
@@ -64,13 +72,7 @@ class AuthService {
    * Logout staff session
    */
   async logout() {
-    try {
-      await api.post('/api/v1/auth/logout', {}, 300);
-    } catch {
-      // Continue cleanup even on network failure
-    } finally {
-      storageService.clearAuthState();
-    }
+    storageService.clearAuthState();
   }
 
   /**
