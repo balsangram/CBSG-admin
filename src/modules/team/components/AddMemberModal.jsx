@@ -272,9 +272,17 @@ export function AddMemberModal({ isOpen, onClose }) {
                     <input
                       type="tel"
                       required
+                      inputMode="numeric"
+                      pattern="[0-9]{10}"
+                      maxLength={10}
                       placeholder="98XXXXXXXX"
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          phone: e.target.value.replace(/\D/g, '').slice(0, 10),
+                        })
+                      }
                       className={`${inputCls} pl-9`}
                     />
                   </div>
