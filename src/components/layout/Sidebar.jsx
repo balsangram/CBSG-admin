@@ -3,7 +3,6 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutGrid,
   Users,
-  UserCheck,
   ShieldAlert,
   Landmark,
   Wallet,
@@ -41,7 +40,6 @@ export function Sidebar({ mobileOpen, setMobileOpen, collapsed = false }) {
       group: 'Customers',
       items: [
         { name: 'Customer records', icon: Users, path: ROUTES.CUSTOMERS, badge: null, isNavLink: true },
-        { name: 'Customer 360', icon: UserCheck, path: ROUTES.CUSTOMER_360, badge: null, isNavLink: true },
         { name: 'KYC queue', icon: ShieldAlert, path: ROUTES.KYC_QUEUE, badge: '2', badgeVariant: 'warning', isNavLink: true },
       ],
     },

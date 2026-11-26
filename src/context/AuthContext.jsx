@@ -1,6 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { AuthContext } from './AuthContextInstance';
 import authService from '../modules/auth/services/auth.service';
+import storageService from '../services/storage.service';
+import { STORAGE_KEYS } from '../utils/constants';
 
 export { AuthContext };
 
@@ -83,9 +85,14 @@ export function AuthProvider({ children }) {
     setAuthError(null);
   }, []);
 
-  /**
-   * Full Logout
-   */
+  const updateUser = useCallback((user) => {
+    setAuthState((prev) => {
+      const nextUser = { ...(prev.user || {}), ...user };
+      storageService.set(STORAGE_KEYS.AUTH_USER, nextUser);
+      return { ...prev, user: nextUser };
+    });
+  }, []);
+
   const logout = useCallback(async () => {
     await authService.logout();
     setAuthState({
@@ -108,6 +115,7 @@ export function AuthProvider({ children }) {
     verifyTwoFactor,
     resetToStep1,
     logout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

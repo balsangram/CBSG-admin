@@ -4,6 +4,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './context/AuthContext';
 import AppRoutes from './routes/AppRoutes';
+import { NOTIFY_DURATION } from './utils/notify';
 
 export function App() {
   return (
@@ -12,15 +13,14 @@ export function App() {
         <AppRoutes />
         <ToastContainer
           position="top-right"
-          autoClose={4000}
+          autoClose={NOTIFY_DURATION}
           hideProgressBar={false}
           newestOnTop
           closeOnClick
-          rtl={false}
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          closeButton
+          theme="colored"
         />
       </AuthProvider>
     </BrowserRouter>

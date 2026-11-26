@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+.Toastify__toast {
+  border-radius: 14px;
+  font-size: 13px;
+  font-family: inherit;
+  min-height: 48px;
+  box-shadow: 0 14px 32px rgba(36, 24, 20, 0.18);
+}
+
 @layer base {
   * {
     box-sizing: border-box;

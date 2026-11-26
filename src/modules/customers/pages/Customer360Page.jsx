@@ -1,73 +1,346 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Mail,
-  ChevronDown,
   X,
   FileCheck2,
   Send,
-  CheckCircle2,
+  Loader2,
+  Pencil,
+  Trash2,
+  Eye,
 } from 'lucide-react';
+import { notify } from '../../../utils/notify';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
-import { customer360Service } from '../services/customer360.service';
+import { customerService } from '../services/customer.service';
+import { ROUTES } from '../../../utils/constants';
+
+const formatINR = (value) => `₹${Number(value || 0).toLocaleString('en-IN')}`;
+
+const formatDate = (value) => {
+  if (!value) return '—';
+  return new Date(value).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
+const draftFromRecord = (record) => ({
+  name: record?.name || '',
+  phone: record?.phone || '',
+  email: record?.email || '',
+  agentId: record?.agentId ? String(record.agentId) : '',
+  address: record?.address || '',
+  aadhar: record?.aadhar || '',
+  pan: record?.pan || '',
+  bankName: record?.bankName || '',
+  accountNumber: record?.accountNumber || '',
+  ifscCode: record?.ifscCode || '',
+  nominee: record?.nominee || '',
+  nomineeRelation: record?.nomineeRelation || '',
+});
+
+const fieldClass =
+  'w-full px-2.5 py-1.5 border border-[#e8e2d5] rounded-lg text-xs font-semibold text-[#2c1b15] outline-none focus:border-[#c88a29] bg-white';
+
+const isImageFile = (file) => Boolean(file?.type?.startsWith('image/'));
+
+const isImageUrl = (url) => /\.(png|jpe?g|webp)(\?|$)/i.test(url || '');
+
+const isPdfUrl = (url) => /\.pdf(\?|$)/i.test(url || '');
+
+function IdentityDocument({ label, storedUrl, previewUrl, file, editing, onFile, children }) {
+  const viewUrl = previewUrl || storedUrl;
+  const showImage = previewUrl ? isImageFile(file) : isImageUrl(storedUrl);
+  const showPdf = !showImage && (file?.type === 'application/pdf' || isPdfUrl(viewUrl));
+
+  return (
+    <div className="rounded-xl border border-[#e8e2d5] bg-[#f8f5ee] p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-[#8a7e75]">{label}</span>
+        {viewUrl && (
+          <a
+            href={viewUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#2c1b15] hover:text-[#c88a29]"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            View
+          </a>
+        )}
+      </div>
+      {showImage ? (
+        <a href={viewUrl} target="_blank" rel="noreferrer" className="block">
+          <img
+            src={viewUrl}
+            alt={label}
+            className="h-40 w-full rounded-lg border border-[#e8e2d5] bg-white object-contain"
+          />
+        </a>
+      ) : showPdf ? (
+        <a
+          href={viewUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="flex h-40 items-center justify-center rounded-lg border border-[#e8e2d5] bg-white text-xs font-semibold text-[#2c1b15]"
+        >
+          <FileCheck2 className="mr-2 h-5 w-5 text-[#c88a29]" />
+          PDF document
+        </a>
+      ) : (
+        <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-[#e8e2d5] bg-white text-xs text-[#8a7e75]">
+          No document
+        </div>
+      )}
+      {children}
+      {editing && (
+        <label className="mt-2 block text-[10px] font-semibold text-[#8a7e75]">
+          {storedUrl || previewUrl ? 'Replace file' : 'Upload file'}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,application/pdf"
+            onChange={(event) => onFile(event.target.files?.[0] || null)}
+            className="mt-1 block w-full text-[10px] text-[#5e5148] file:mr-2 file:rounded-md file:border-0 file:bg-white file:px-2 file:py-1 file:text-[10px] file:font-semibold"
+          />
+        </label>
+      )}
+    </div>
+  );
+}
+
+const toProfile = (record) => {
+  const bank = [record.bankName, record.accountNumber, record.ifscCode]
+    .filter(Boolean)
+    .join(' · ');
+  const kycStatus =
+    record.kyc === 'verified'
+      ? 'KYC verified'
+      : record.kyc === 'rejected'
+        ? 'KYC rejected'
+        : 'KYC pending';
+
+  return {
+    name: record.name,
+    mobile: record.phone,
+    code: record.email || '—',
+    avatar: record.photo,
+    kycStatus,
+    stage: 'active',
+    savingsBalance: formatINR(record.totalSaving),
+    activePlansCount: 0,
+    branch: record.branch || '—',
+    address: [record.address, record.pinCode].filter(Boolean).join(', ') || '—',
+    addressShort: record.address || '—',
+    relationshipExecutive: record.executive || '—',
+    pan: record.pan || '—',
+    joined: formatDate(record.joiningDate),
+    bankAccount: bank || '—',
+    nominee: record.nominee
+      ? `${record.nominee}${record.nomineeRelation ? ` (${record.nomineeRelation})` : ''}`
+      : '—',
+    savingsPlans: [],
+    transactions: [],
+    aadharDocument: record.aadharDocument || '',
+    panDocument: record.panDocument || '',
+    documents: [
+      {
+        id: 'aadhar',
+        type: 'Aadhaar',
+        number: record.aadhar || '—',
+        url: record.aadharDocument || '',
+        status: record.kyc === 'verified' ? 'Verified' : 'Pending',
+        date: formatDate(record.updatedAt),
+      },
+      {
+        id: 'pan',
+        type: 'PAN',
+        number: record.pan || '—',
+        url: record.panDocument || '',
+        status: record.kyc === 'verified' ? 'Verified' : 'Pending',
+        date: formatDate(record.updatedAt),
+      },
+    ],
+  };
+};
 
 export function Customer360Page() {
-  const [selectedCustomerCode, setSelectedCustomerCode] = useState('CBSGPRIY15');
-  const [activeTab, setActiveTab] = useState('Savings'); // 'Savings', 'Transactions', 'KYC & documents'
-  const [showSignedInAlert, setShowSignedInAlert] = useState(true);
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [customer, setCustomer] = useState(null);
+  const [record, setRecord] = useState(null);
+  const [agents, setAgents] = useState([]);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [docFiles, setDocFiles] = useState({ aadharDocument: null, panDocument: null });
+  const [docPreviews, setDocPreviews] = useState({ aadharDocument: '', panDocument: '' });
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [pendingDelete, setPendingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [activeTab, setActiveTab] = useState('Savings');
   const [showMessageModal, setShowMessageModal] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [messageText, setMessageText] = useState('Dear Priya, your CBSG savings account statement for November 2026 is ready.');
+  const [messageText, setMessageText] = useState('');
 
-  const customer = customer360Service.getCustomer(selectedCustomerCode);
-  const customerList = customer360Service.getAllCustomers();
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      setLoadError('Open a customer from Customer records.');
+      return;
+    }
+
+    let active = true;
+
+    customerService
+      .getCustomer(id)
+      .then((nextRecord) => {
+        if (!active) return;
+        const profile = toProfile(nextRecord);
+        setRecord(nextRecord);
+        setCustomer(profile);
+        setMessageText(`Dear ${profile.name}, your CBSG savings account statement is ready.`);
+      })
+      .catch((error) => {
+        if (active) setLoadError(error.message || 'Failed to load customer.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    customerService.getAgents().then(setAgents).catch(() => setAgents([]));
+  }, []);
+
+  const clearDocPreviews = () => {
+    setDocPreviews((current) => {
+      Object.values(current).forEach((url) => {
+        if (url?.startsWith('blob:')) URL.revokeObjectURL(url);
+      });
+      return { aadharDocument: '', panDocument: '' };
+    });
+    setDocFiles({ aadharDocument: null, panDocument: null });
+  };
+
+  const startEdit = () => {
+    setDraft(draftFromRecord(record));
+    setPhotoFile(null);
+    clearDocPreviews();
+    setEditError('');
+    setEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setEditing(false);
+    setDraft(null);
+    setPhotoFile(null);
+    clearDocPreviews();
+    setEditError('');
+  };
+
+  const setDocFile = (key, file) => {
+    setDocFiles((current) => ({ ...current, [key]: file }));
+    setDocPreviews((current) => {
+      if (current[key]?.startsWith('blob:')) URL.revokeObjectURL(current[key]);
+      return { ...current, [key]: file ? URL.createObjectURL(file) : '' };
+    });
+  };
+
+  const setField = (key, value) => {
+    setDraft((current) => ({ ...current, [key]: value }));
+  };
+
+  const handleSave = async () => {
+    if (!draft?.name.trim() || !draft.phone.trim() || !draft.agentId) {
+      setEditError('Name, phone, and executive are required.');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setEditError('');
+      const updated = await customerService.updateCustomer(
+        id,
+        {
+          name: draft.name.trim(),
+          phone: draft.phone.trim(),
+          email: draft.email.trim(),
+          agentId: draft.agentId,
+          address: draft.address.trim(),
+          aadhar: draft.aadhar.trim(),
+          pan: draft.pan.trim().toUpperCase(),
+          bankName: draft.bankName.trim(),
+          accountNumber: draft.accountNumber.trim(),
+          ifscCode: draft.ifscCode.trim().toUpperCase(),
+          nominee: draft.nominee.trim(),
+          nomineeRelation: draft.nomineeRelation.trim(),
+        },
+        {
+          photo: photoFile,
+          aadharDocument: docFiles.aadharDocument,
+          panDocument: docFiles.panDocument,
+        }
+      );
+      setRecord(updated);
+      setCustomer(toProfile(updated));
+      setEditing(false);
+      setDraft(null);
+      setPhotoFile(null);
+      clearDocPreviews();
+      notify.success('Customer updated.');
+    } catch (error) {
+      setEditError(error.message || 'Failed to update customer.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      setDeleting(true);
+      await customerService.deleteCustomer(id);
+      notify.success('Customer deleted.');
+      navigate(ROUTES.CUSTOMERS);
+    } catch (error) {
+      notify.error(error.message || 'Failed to delete customer.');
+      setDeleting(false);
+    }
+  };
 
   const handleSendMessage = (e) => {
     e.preventDefault();
     setShowMessageModal(false);
-    setToastMessage(`SMS & WhatsApp dispatch sent to ${customer.name} (${customer.mobile}).`);
-    setTimeout(() => setToastMessage(''), 4000);
+    notify.success(`SMS & WhatsApp dispatch sent to ${customer.name} (${customer.mobile}).`);
   };
+
+  if (loading || loadError || !customer) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center gap-2 py-24 text-sm text-[#7a6e67]">
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Loading customer…
+            </>
+          ) : (
+            loadError || 'Customer not found.'
+          )}
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
-      {/* 1. Signed in status notification banner */}
-      {showSignedInAlert && (
-        <div className="mb-4 py-2 px-3.5 bg-white/70 border border-[#e8e2d5] rounded-xl flex items-center justify-between text-xs text-[#2c1b15] shadow-2xs animate-fadeIn">
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-[10px] font-bold">
-              ✓
-            </span>
-            <span className="font-medium">Signed in</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowSignedInAlert(false)}
-            className="text-[#968a80] hover:text-[#2c1b15] p-1 cursor-pointer"
-            aria-label="Dismiss signed in alert"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
-      {/* Global Toast */}
-      {toastMessage && (
-        <div className="mb-4 py-2.5 px-4 bg-[#e7f7ed] border border-emerald-200 text-emerald-900 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs animate-fadeIn">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>{toastMessage}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setToastMessage('')}
-            className="text-emerald-800 hover:text-emerald-950 ml-2"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* 2. Page Header: Title and Actions */}
+      {/* Page Header: Title and Actions */}
       <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#241814]">
@@ -80,23 +353,43 @@ export function Customer360Page() {
 
         {/* Right Action Controls: Customer Picker + Message */}
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
-          {/* Customer Selection Pill */}
-          <div className="relative">
-            <select
-              value={selectedCustomerCode}
-              onChange={(e) => setSelectedCustomerCode(e.target.value)}
-              className="appearance-none bg-white text-xs font-semibold text-[#2c1b15] border border-[#ded8cb] rounded-full pl-4 pr-8 py-2 shadow-2xs outline-none cursor-pointer hover:border-[#c8bfb0] transition-colors"
+          {editing ? (
+            <>
+              <button
+                type="button"
+                onClick={cancelEdit}
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-[#f6f2e9] border border-[#ded8cb] text-xs font-medium text-[#2c1b15] transition-colors shadow-2xs cursor-pointer select-none disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2c1b15] hover:bg-[#1a0f0b] text-white text-xs font-medium transition-colors shadow-2xs cursor-pointer select-none disabled:opacity-60"
+              >
+                {saving ? 'Saving…' : 'Save'}
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={startEdit}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-[#f6f2e9] border border-[#ded8cb] text-xs font-medium text-[#2c1b15] transition-colors shadow-2xs cursor-pointer select-none"
             >
-              {customerList.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-[#8c8076] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-
-          {/* Message Button */}
+              <Pencil className="w-3.5 h-3.5 text-[#7a6e67]" />
+              <span>Edit</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setPendingDelete(true)}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-rose-50 border border-rose-200 text-xs font-medium text-rose-700 transition-colors shadow-2xs cursor-pointer select-none"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Delete</span>
+          </button>
           <button
             type="button"
             onClick={() => setShowMessageModal(true)}
@@ -109,23 +402,73 @@ export function Customer360Page() {
       </div>
 
       {/* 3. Main Customer Profile Card */}
-      <div className="bg-white rounded-2xl border border-[#e8e2d5] p-6 shadow-2xs mb-6">
+      <div className={`bg-white rounded-2xl border p-6 shadow-2xs mb-6 ${editing ? 'border-[#c88a29]' : 'border-[#e8e2d5]'}`}>
+        {editError && (
+          <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
+            {editError}
+          </div>
+        )}
         {/* Top Profile Summary Row */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-[#f3efe6]">
           {/* Left Avatar & Identity */}
-          <div className="flex items-center gap-4">
-            <img
-              src={customer.avatar}
-              alt={customer.name}
-              className="w-14 h-14 rounded-full object-cover border border-[#ded8cb] shrink-0"
-            />
-            <div>
-              <h3 className="text-lg font-bold text-[#2c1b15] leading-tight">
-                {customer.name}
-              </h3>
-              <p className="text-xs text-[#7a6e67] font-mono mt-0.5">
-                {customer.mobile} · {customer.code}
-              </p>
+          <div className="flex items-center gap-4 min-w-0 flex-1">
+            <div className="shrink-0">
+              {customer.avatar ? (
+                <img
+                  src={customer.avatar}
+                  alt={customer.name}
+                  className="w-14 h-14 rounded-full object-cover border border-[#ded8cb]"
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-full bg-[#2c1b15] text-[#cca04b] text-lg font-bold flex items-center justify-center">
+                  {(customer.name || 'C').charAt(0).toUpperCase()}
+                </div>
+              )}
+              {editing && (
+                <label className="mt-2 block text-[10px] font-semibold text-[#8a7e75] cursor-pointer">
+                  Photo
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(event) => setPhotoFile(event.target.files?.[0] || null)}
+                    className="mt-1 block w-28 text-[10px] text-[#5e5148] file:mr-1 file:rounded-md file:border-0 file:bg-[#f6f2e9] file:px-1.5 file:py-1 file:text-[10px] file:font-semibold"
+                  />
+                </label>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              {editing ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <input
+                    value={draft.name}
+                    onChange={(event) => setField('name', event.target.value)}
+                    placeholder="Name"
+                    className={fieldClass}
+                  />
+                  <input
+                    value={draft.phone}
+                    onChange={(event) => setField('phone', event.target.value)}
+                    placeholder="Phone"
+                    className={`${fieldClass} font-mono`}
+                  />
+                  <input
+                    type="email"
+                    value={draft.email}
+                    onChange={(event) => setField('email', event.target.value)}
+                    placeholder="Email"
+                    className={fieldClass}
+                  />
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-lg font-bold text-[#2c1b15] leading-tight">
+                    {customer.name}
+                  </h3>
+                  <p className="text-xs text-[#7a6e67] font-mono mt-0.5">
+                    {customer.mobile} · {customer.code}
+                  </p>
+                </>
+              )}
               <div className="mt-2 flex items-center gap-2">
                 <span className="inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold bg-[#fef1db] text-[#b46500]">
                   {customer.kycStatus}
@@ -161,7 +504,6 @@ export function Customer360Page() {
 
         {/* Bottom Metadata 4-Column Grid */}
         <div className="pt-6 grid grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-6 text-xs">
-          {/* Column 1 */}
           <div>
             <span className="text-[10px] font-bold text-[#8a7e75] uppercase tracking-wider block mb-1">
               BRANCH
@@ -169,33 +511,48 @@ export function Customer360Page() {
             <span className="font-semibold text-[#2c1b15] block">
               {customer.branch}
             </span>
-
-            <span className="text-[10px] font-bold text-[#8a7e75] uppercase tracking-wider block mt-3 mb-1">
-              ADDRESS
-            </span>
-            <span className="font-semibold text-[#2c1b15] block truncate" title={customer.address}>
-              {customer.addressShort}
-            </span>
           </div>
 
-          {/* Column 2 */}
           <div>
             <span className="text-[10px] font-bold text-[#8a7e75] uppercase tracking-wider block mb-1">
               RELATIONSHIP EXECUTIVE
             </span>
-            <span className="font-semibold text-[#2c1b15] block">
-              {customer.relationshipExecutive}
-            </span>
+            {editing ? (
+              <select
+                value={draft.agentId}
+                onChange={(event) => setField('agentId', event.target.value)}
+                className={fieldClass}
+              >
+                <option value="">Select executive</option>
+                {agents.map((agent) => (
+                  <option key={agent.id} value={agent.id}>
+                    {agent.name}
+                    {agent.employeeId ? ` · ${agent.employeeId}` : ''}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="font-semibold text-[#2c1b15] block">
+                {customer.relationshipExecutive}
+              </span>
+            )}
 
             <span className="text-[10px] font-bold text-[#8a7e75] uppercase tracking-wider block mt-3 mb-1">
               PAN
             </span>
-            <span className="font-semibold text-[#2c1b15] font-mono block">
-              {customer.pan}
-            </span>
+            {editing ? (
+              <input
+                value={draft.pan}
+                onChange={(event) => setField('pan', event.target.value)}
+                className={`${fieldClass} font-mono uppercase`}
+              />
+            ) : (
+              <span className="font-semibold text-[#2c1b15] font-mono block">
+                {customer.pan}
+              </span>
+            )}
           </div>
 
-          {/* Column 3 */}
           <div>
             <span className="text-[10px] font-bold text-[#8a7e75] uppercase tracking-wider block mb-1">
               JOINED
@@ -207,20 +564,116 @@ export function Customer360Page() {
             <span className="text-[10px] font-bold text-[#8a7e75] uppercase tracking-wider block mt-3 mb-1">
               BANK ACCOUNT
             </span>
-            <span className="font-semibold text-[#2c1b15] block">
-              {customer.bankAccount}
-            </span>
+            {editing ? (
+              <div className="space-y-1.5">
+                <input
+                  value={draft.bankName}
+                  onChange={(event) => setField('bankName', event.target.value)}
+                  placeholder="Bank name"
+                  className={fieldClass}
+                />
+                <input
+                  value={draft.accountNumber}
+                  onChange={(event) => setField('accountNumber', event.target.value)}
+                  placeholder="Account number"
+                  className={`${fieldClass} font-mono`}
+                />
+                <input
+                  value={draft.ifscCode}
+                  onChange={(event) => setField('ifscCode', event.target.value)}
+                  placeholder="IFSC"
+                  className={`${fieldClass} font-mono uppercase`}
+                />
+              </div>
+            ) : (
+              <span className="font-semibold text-[#2c1b15] block">
+                {customer.bankAccount}
+              </span>
+            )}
           </div>
 
-          {/* Column 4 */}
           <div>
             <span className="text-[10px] font-bold text-[#8a7e75] uppercase tracking-wider block mb-1">
               NOMINEE
             </span>
-            <span className="font-semibold text-[#2c1b15] block">
-              {customer.nominee}
-            </span>
+            {editing ? (
+              <div className="space-y-1.5">
+                <input
+                  value={draft.nominee}
+                  onChange={(event) => setField('nominee', event.target.value)}
+                  placeholder="Nominee name"
+                  className={fieldClass}
+                />
+                <input
+                  value={draft.nomineeRelation}
+                  onChange={(event) => setField('nomineeRelation', event.target.value)}
+                  placeholder="Relation"
+                  className={fieldClass}
+                />
+              </div>
+            ) : (
+              <span className="font-semibold text-[#2c1b15] block">
+                {customer.nominee}
+              </span>
+            )}
           </div>
+        </div>
+
+        <div className="mt-6">
+          <span className="text-[10px] font-bold text-[#8a7e75] uppercase tracking-wider block mb-1">
+            ADDRESS
+          </span>
+          {editing ? (
+            <textarea
+              rows={4}
+              value={draft.address}
+              onChange={(event) => setField('address', event.target.value)}
+              placeholder="House, street, area, city, pin code"
+              className={`${fieldClass} min-h-28 resize-y leading-5`}
+            />
+          ) : (
+            <p className="min-h-16 whitespace-pre-wrap font-semibold text-[#2c1b15] leading-5">
+              {customer.addressShort}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <IdentityDocument
+            label="Aadhaar document"
+            storedUrl={customer.aadharDocument}
+            previewUrl={docPreviews.aadharDocument}
+            file={docFiles.aadharDocument}
+            editing={editing}
+            onFile={(file) => setDocFile('aadharDocument', file)}
+          >
+            <div className="mt-2">
+              <span className="text-[10px] font-bold text-[#8a7e75] uppercase tracking-wider block mb-1">
+                Aadhaar number
+              </span>
+              {editing ? (
+                <input
+                  value={draft.aadhar}
+                  onChange={(event) => setField('aadhar', event.target.value)}
+                  placeholder="12 digit Aadhaar"
+                  className={`${fieldClass} font-mono`}
+                />
+              ) : (
+                <span className="font-semibold font-mono text-[#2c1b15]">
+                  {record?.aadhar || '—'}
+                </span>
+              )}
+            </div>
+          </IdentityDocument>
+
+          <IdentityDocument
+            label="PAN document"
+            storedUrl={customer.panDocument}
+            previewUrl={docPreviews.panDocument}
+            file={docFiles.panDocument}
+            editing={editing}
+            onFile={(file) => setDocFile('panDocument', file)}
+          />
         </div>
       </div>
 
@@ -245,7 +698,13 @@ export function Customer360Page() {
       </div>
 
       {/* 5. Tab Content Panels */}
-      {activeTab === 'Savings' && (
+      {activeTab === 'Savings' && customer.savingsPlans.length === 0 && (
+        <div className="bg-white rounded-2xl border border-[#e8e2d5] p-8 text-center text-xs text-[#8a7e75]">
+          No savings plans for this customer.
+        </div>
+      )}
+
+      {activeTab === 'Savings' && customer.savingsPlans.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {customer.savingsPlans.map((plan) => (
             <div
@@ -332,7 +791,13 @@ export function Customer360Page() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f5f1e8]">
-                {customer.transactions.map((tx) => (
+                {customer.transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-10 text-center text-[#8a7e75]">
+                      No transactions for this customer.
+                    </td>
+                  </tr>
+                ) : customer.transactions.map((tx) => (
                   <tr key={tx.id} className="hover:bg-[#faf7f0]/60 transition-colors">
                     <td className="py-2.5 px-4 text-[#7a6e67] font-mono text-[11px]">
                       {tx.time}
@@ -368,6 +833,9 @@ export function Customer360Page() {
             Verified Documents & Regulatory Compliance
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {customer.documents.length === 0 && (
+              <p className="text-xs text-[#8a7e75]">No documents on file.</p>
+            )}
             {customer.documents.map((doc) => (
               <div
                 key={doc.id}
@@ -393,9 +861,21 @@ export function Customer360Page() {
                     {doc.number}
                   </p>
                 </div>
-                <div className="mt-4 pt-2 border-t border-[#ede8de] text-[10px] text-[#8a7e75] flex items-center justify-between">
+                <div className="mt-4 pt-2 border-t border-[#ede8de] text-[10px] text-[#8a7e75] flex items-center justify-between gap-2">
                   <span>Uploaded: {doc.date}</span>
-                  <span className="font-semibold text-emerald-700">Audit-ready</span>
+                  {doc.url ? (
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 font-semibold text-[#2c1b15] hover:text-[#c88a29]"
+                    >
+                      <Eye className="w-3 h-3" />
+                      View
+                    </a>
+                  ) : (
+                    <span>No file</span>
+                  )}
                 </div>
               </div>
             ))}
@@ -463,6 +943,35 @@ export function Customer360Page() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {pendingDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 border border-[#ded8cb]">
+            <h3 className="text-sm font-bold text-[#2c1b15]">Delete customer</h3>
+            <p className="mt-2 text-xs text-[#7a6e67]">
+              Delete {customer.name}? This removes the customer record.
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setPendingDelete(false)}
+                disabled={deleting}
+                className="px-3 py-1.5 rounded-xl border border-[#e8e2d5] text-xs font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-3 py-1.5 rounded-xl bg-rose-700 text-white text-xs font-semibold"
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}

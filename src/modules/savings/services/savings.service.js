@@ -13,7 +13,6 @@ export const initialSchemeConfig = {
   monthlyInterest: 1.0,
   monthlyInterestDate: '1st of every month',
   preClosureRule: '180 days: cap reached plus six months. Medical emergency subject to admin approval. No penalty.',
-  isLive: true,
   rules: [
     {
       id: 'rule-1',

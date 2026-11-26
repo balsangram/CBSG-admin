@@ -1,293 +1,69 @@
-/**
- * CBSG Customer Records Service & Mock Dataset
- * Matches the official CBSG Finance Limited Customer Records Console
- */
+import { api } from '../../../services/api';
 
-export const mockCustomerRecords = [
-  {
-    id: 'cust-1',
-    name: 'dodmdd',
-    code: 'CBSGPRIY16',
-    mobile: '9876543210',
-    branch: 'Pune',
-    executive: 'Rahul Verma',
-    plans: 2,
-    balance: '₹1,11,200',
-    balanceNumeric: 111200,
-    kyc: 'pending',
-    stage: 'active',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80',
-    email: 'dodmdd@cbsgclient.in',
-    joinedDate: '12 Sep 2026',
-    schemeName: 'CBSG Recurring Gold Accumulation Plan',
-  },
-  {
-    id: 'cust-2',
-    name: 'Amit Patel',
-    code: 'CBSGAMI121',
-    mobile: '9013580237',
-    branch: 'Pune',
-    executive: 'Rahul Verma',
-    plans: 1,
-    balance: '₹38,000',
-    balanceNumeric: 38000,
-    kyc: 'verified',
-    stage: 'active',
-    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=120&q=80',
-    email: 'amit.patel@gmail.com',
-    joinedDate: '18 Aug 2026',
-    schemeName: 'CBSG Growth Fixed Deposit',
-  },
-  {
-    id: 'cust-3',
-    name: 'Sunita Deshmukh',
-    code: 'CBSGSUN109',
-    mobile: '9060493783',
-    branch: 'Pune',
-    executive: 'Rahul Verma',
-    plans: 1,
-    balance: '₹24,500',
-    balanceNumeric: 24500,
-    kyc: 'verified',
-    stage: 'maturing',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80',
-    email: 'sunita.d@yahoo.com',
-    joinedDate: '04 May 2026',
-    schemeName: 'Senior Citizen Term Certificate',
-  },
-  {
-    id: 'cust-4',
-    name: 'Rohan Kulkarni',
-    code: 'CBSGROH425',
-    mobile: '9018510606',
-    branch: 'Pune',
-    executive: 'Rahul Verma',
-    plans: 1,
-    balance: '₹4,400',
-    balanceNumeric: 4400,
-    kyc: 'verified',
-    stage: 'active',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&q=80',
-    email: 'rohan.kulkarni@gmail.com',
-    joinedDate: '29 Oct 2026',
-    schemeName: 'Smart Savings Monthly Plan',
-  },
-  {
-    id: 'cust-5',
-    name: 'Neha Gupta',
-    code: 'CBSGNEH442',
-    mobile: '9039506144',
-    branch: 'Pune',
-    executive: 'Sneha Iyer',
-    plans: 1,
-    balance: '₹7,000',
-    balanceNumeric: 7000,
-    kyc: 'verified',
-    stage: 'active',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
-    email: 'neha.gupta@enterprise.in',
-    joinedDate: '14 Oct 2026',
-    schemeName: 'CBSG Recurring Deposit',
-  },
-  {
-    id: 'cust-6',
-    name: 'Farhan Shaikh',
-    code: 'CBSGFAR169',
-    mobile: '9072839453',
-    branch: 'Pune',
-    executive: 'Sneha Iyer',
-    plans: 0,
-    balance: '₹0',
-    balanceNumeric: 0,
-    kyc: 'rejected',
-    stage: 'new',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80',
-    email: 'farhan.shaikh@hotmail.com',
-    joinedDate: '19 Nov 2026',
-    schemeName: 'Application Awaiting Re-KYC',
-  },
-  {
-    id: 'cust-7',
-    name: 'Lakshmi Reddy',
-    code: 'CBSGLAK536',
-    mobile: '9052098742',
-    branch: 'Nagpur',
-    executive: 'Vikram Singh',
-    plans: 1,
-    balance: '₹3,800',
-    balanceNumeric: 3800,
-    kyc: 'verified',
-    stage: 'active',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80',
-    email: 'lakshmi.reddy@rediffmail.com',
-    joinedDate: '08 Nov 2026',
-    schemeName: 'Mahila Samriddhi Deposit',
-  },
-  {
-    id: 'cust-8',
-    name: 'Deepak Yadav',
-    code: 'CBSGDEE770',
-    mobile: '9074074020',
-    branch: 'Nagpur',
-    executive: 'Vikram Singh',
-    plans: 1,
-    balance: '₹50,000',
-    balanceNumeric: 50000,
-    kyc: 'verified',
-    stage: 'active',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=120&q=80',
-    email: 'deepak.yadav@yadavtrans.com',
-    joinedDate: '01 Jul 2026',
-    schemeName: 'Commercial NBFC Term Certificate',
-  },
-  {
-    id: 'cust-9',
-    name: 'Anjali Menon',
-    code: 'CBSGANJ451',
-    mobile: '9050617247',
-    branch: 'Mumbai',
-    executive: 'Kavya Nair',
-    plans: 1,
-    balance: '₹5,00,000',
-    balanceNumeric: 500000,
-    kyc: 'verified',
-    stage: 'maturing',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=120&q=80',
-    email: 'anjali.menon@menonholdings.in',
-    joinedDate: '15 Jan 2026',
-    schemeName: 'HNI Wealth Builder Plan',
-  },
-  {
-    id: 'cust-10',
-    name: 'Suresh Pillai',
-    code: 'CBSGSUR178',
-    mobile: '9083950556',
-    branch: 'Mumbai',
-    executive: 'Kavya Nair',
-    plans: 1,
-    balance: '₹16,000',
-    balanceNumeric: 16000,
-    kyc: 'verified',
-    stage: 'active',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80',
-    email: 'suresh.pillai@shoppers.com',
-    joinedDate: '22 Sep 2026',
-    schemeName: 'Flexi Liquidity Scheme',
-  },
-  {
-    id: 'cust-11',
-    name: 'Pooja Bhatt',
-    code: 'CBSGPOO133',
-    mobile: '9028395041',
-    branch: 'Mumbai',
-    executive: 'Kavya Nair',
-    plans: 0,
-    balance: '₹0',
-    balanceNumeric: 0,
-    kyc: 'pending',
-    stage: 'new',
-    avatar: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=120&q=80',
-    email: 'pooja.bhatt@outlook.com',
-    joinedDate: '21 Nov 2026',
-    schemeName: 'New Onboarding In Progress',
-  },
-  {
-    id: 'cust-12',
-    name: 'Vikram Joshi',
-    code: 'CBSGVIK210',
-    mobile: '9048123901',
-    branch: 'Pune',
-    executive: 'Rahul Verma',
-    plans: 2,
-    balance: '₹1,45,000',
-    balanceNumeric: 145000,
-    kyc: 'verified',
-    stage: 'active',
-    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=120&q=80',
-    email: 'vikram.joshi@joshigroup.com',
-    joinedDate: '10 Feb 2026',
-    schemeName: 'Enterprise Growth Facility',
-  },
-  {
-    id: 'cust-13',
-    name: 'Meera Nair',
-    code: 'CBSGMEE882',
-    mobile: '9067341290',
-    branch: 'Mumbai',
-    executive: 'Kavya Nair',
-    plans: 1,
-    balance: '₹82,500',
-    balanceNumeric: 82500,
-    kyc: 'verified',
-    stage: 'active',
-    avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=120&q=80',
-    email: 'meera.nair@icloud.com',
-    joinedDate: '19 Jun 2026',
-    schemeName: 'Secured Deposit Plan',
-  },
-  {
-    id: 'cust-14',
-    name: 'Rajesh Iyer',
-    code: 'CBSGRAJ319',
-    mobile: '9012984567',
-    branch: 'Nagpur',
-    executive: 'Vikram Singh',
-    plans: 1,
-    balance: '₹28,000',
-    balanceNumeric: 28000,
-    kyc: 'verified',
-    stage: 'maturing',
-    avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=120&q=80',
-    email: 'rajesh.iyer@gmail.com',
-    joinedDate: '02 Apr 2026',
-    schemeName: 'Annual Cumulative Deposit',
-  },
-  {
-    id: 'cust-15',
-    name: 'Swati Patil',
-    code: 'CBSGSWA604',
-    mobile: '9034567812',
-    branch: 'Pune',
-    executive: 'Sneha Iyer',
-    plans: 0,
-    balance: '₹0',
-    balanceNumeric: 0,
-    kyc: 'pending',
-    stage: 'new',
-    avatar: 'https://images.unsplash.com/photo-1548142813-c348350df52b?auto=format&fit=crop&w=120&q=80',
-    email: 'swati.patil@patilfarms.in',
-    joinedDate: '20 Nov 2026',
-    schemeName: 'Aadhaar Verification Pending',
-  },
-];
+const withPhoto = (payload, photoFile) => {
+  if (!photoFile) return payload;
+
+  const body = new FormData();
+  Object.entries(payload).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) body.append(key, value);
+  });
+  body.append('photo', photoFile);
+  return body;
+};
+
+const requestConfig = (photoFile) => {
+  if (!photoFile) return undefined;
+  return { headers: { 'Content-Type': 'multipart/form-data' } };
+};
 
 export const customerService = {
   async getCustomers() {
-    return mockCustomerRecords;
+    const { data } = await api.get('/admin/customers');
+    return data?.data || [];
   },
 
-  async filterCustomers({ query = '', stage = 'All stages', branch = 'All branches' }) {
-    const q = query.trim().toLowerCase();
+  async getCustomer(id) {
+    const { data } = await api.get(`/admin/customers/${id}`);
+    return data?.data;
+  },
 
-    return mockCustomerRecords.filter((customer) => {
-      // Search filter
-      const matchesQuery =
-        !q ||
-        customer.name.toLowerCase().includes(q) ||
-        customer.code.toLowerCase().includes(q) ||
-        customer.mobile.includes(q) ||
-        customer.executive.toLowerCase().includes(q);
+  async createCustomer(payload, photoFile) {
+    const { data } = await api.post(
+      '/admin/customers',
+      withPhoto(payload, photoFile),
+      requestConfig(photoFile)
+    );
+    return data?.data;
+  },
 
-      // Stage filter
-      const matchesStage = stage === 'All stages' || customer.stage.toLowerCase() === stage.toLowerCase();
+  async updateCustomer(id, payload, files = {}) {
+    const uploads = Object.entries(files).filter(([, file]) => file);
 
-      // Branch filter
-      const matchesBranch = branch === 'All branches' || customer.branch.toLowerCase() === branch.toLowerCase();
+    if (!uploads.length) {
+      const { data } = await api.put(`/admin/customers/${id}`, payload);
+      return data?.data;
+    }
 
-      return matchesQuery && matchesStage && matchesBranch;
+    const body = new FormData();
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) body.append(key, value);
     });
+    uploads.forEach(([key, file]) => body.append(key, file));
+
+    const { data } = await api.put(`/admin/customers/${id}`, body, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data?.data;
+  },
+
+  async deleteCustomer(id) {
+    await api.delete(`/admin/customers/${id}`);
+  },
+
+  async getAgents() {
+    const { data } = await api.get('/admin/agents');
+    return data?.data || [];
   },
 };
 
 export default customerService;
-

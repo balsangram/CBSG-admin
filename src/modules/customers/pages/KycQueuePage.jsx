@@ -166,30 +166,23 @@ export function KycQueuePage() {
       ),
     },
     {
-      key: 'reviewReason',
-      header: 'Review Reason',
-      cellClassName: 'text-[#5e5148] max-w-xs truncate',
-      render: (rec) => (
-        <span title={rec.reviewReason}>{rec.reviewReason}</span>
-      ),
-    },
-    {
       key: 'action',
-      header: 'Action',
+      header: '',
       headerClassName: 'pr-5 pl-2 text-right',
       cellClassName: 'pr-5 pl-2 text-right whitespace-nowrap',
       align: 'right',
       render: (rec) => (
         <button
           type="button"
+          title="View"
+          aria-label="View KYC"
           onClick={(e) => {
             e.stopPropagation();
             openReview(rec);
           }}
-          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#ded8cb] text-xs font-semibold text-[#2c1b15] hover:bg-[#faf7f0] transition-colors cursor-pointer select-none"
+          className="p-1.5 text-stone-400 hover:text-[#2c1b15] rounded-lg cursor-pointer"
         >
-          <Eye className="w-3 h-3 text-[#7a6e67]" />
-          <span>View KYC</span>
+          <Eye className="w-3.5 h-3.5" />
         </button>
       ),
     },
@@ -296,23 +289,18 @@ export function KycQueuePage() {
           )}
         </div>
 
-        {/* Filter Pills */}
-        <div className="inline-flex p-1 bg-white border border-[#ded8cb] rounded-full gap-1 text-xs font-semibold self-start sm:self-auto shadow-2xs">
+        <select
+          value={selectedFilter}
+          onChange={(event) => setSelectedFilter(event.target.value)}
+          aria-label="KYC status"
+          className="self-start sm:self-auto bg-white text-xs font-semibold text-[#2c1b15] border border-[#ded8cb] rounded-full pl-4 pr-8 py-2.5 shadow-2xs outline-none cursor-pointer hover:border-[#c8bfb0]"
+        >
           {['All', 'Approved', 'Rejected', 'Pending'].map((filter) => (
-            <button
-              key={filter}
-              type="button"
-              onClick={() => setSelectedFilter(filter)}
-              className={`px-3 py-1 rounded-full text-xs transition-colors cursor-pointer ${
-                selectedFilter === filter
-                  ? 'bg-[#2c1b15] text-white'
-                  : 'text-[#6e6158] hover:text-[#2c1b15]'
-              }`}
-            >
+            <option key={filter} value={filter}>
               {filter}
-            </button>
+            </option>
           ))}
-        </div>
+        </select>
       </div>
 
       {/* 5. KYC Approval Queue Table */}

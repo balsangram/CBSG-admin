@@ -137,11 +137,17 @@ export function Header({ setMobileOpen, toggleSidebarCollapse }) {
             onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
             className="flex items-center gap-2.5 p-1 rounded-xl hover:bg-[#ede8de] transition-colors cursor-pointer"
           >
-            <img
-              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80"
-              alt="Sanjay Kulkarni"
-              className="w-8 h-8 rounded-full object-cover border border-[#d8d1c3]"
-            />
+            {user?.photo ? (
+              <img
+                src={user.photo}
+                alt={user?.name || 'Admin'}
+                className="w-8 h-8 rounded-full object-cover border border-[#d8d1c3]"
+              />
+            ) : (
+              <span className="w-8 h-8 rounded-full bg-[#2c1b15] text-[#cca04b] text-xs font-bold flex items-center justify-center border border-[#d8d1c3]">
+                {(user?.name || 'A').charAt(0).toUpperCase()}
+              </span>
+            )}
             <div className="hidden sm:block text-left leading-tight">
               <p className="text-xs font-bold text-[#2c1b15]">
                 {user?.name || APP_CONFIG.DEMO_STAFF_NAME}
