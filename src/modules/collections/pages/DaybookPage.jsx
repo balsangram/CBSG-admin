@@ -2,11 +2,11 @@ import React, { useState, useMemo } from 'react';
 import {
   Download,
   ChevronDown,
-  X,
   BookOpen,
   CheckCircle2,
 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import DataTable from '../../../components/common/DataTable';
 import {
   daybookSummary,
@@ -20,7 +20,7 @@ export function DaybookPage() {
   const [passbook] = useState(customerSavingsPassbook);
   const [selectedCustomer, setSelectedCustomer] = useState('All customers');
   const [selectedMode, setSelectedMode] = useState('All modes');
-  const [showSignedInAlert, setShowSignedInAlert] = useState(true);
+
   const [toastMessage, setToastMessage] = useState('');
 
   // Extract distinct customers for dropdown
@@ -133,25 +133,23 @@ export function DaybookPage() {
 
   return (
     <DashboardLayout>
-      {/* 1. Signed in status notification banner */}
-      {showSignedInAlert && (
-        <div className="mb-4 py-2 px-3.5 bg-white/70 border border-[#e8e2d5] rounded-xl flex items-center justify-between text-xs text-[#2c1b15] shadow-2xs animate-fadeIn">
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-[10px] font-bold">
-              ✓
-            </span>
-            <span className="font-medium">Signed in</span>
-          </div>
+      <PageHeader
+        crumbs={['Home', 'Collections', 'Daybook']}
+        title="Customer savings day book"
+        subtitle={summary.date}
+        actions={
           <button
             type="button"
-            onClick={() => setShowSignedInAlert(false)}
-            className="text-[#968a80] hover:text-[#2c1b15] p-1 cursor-pointer"
-            aria-label="Dismiss signed in alert"
+            onClick={handleExport}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#c88a29] hover:bg-[#d99a3d] text-[#2c1b15] text-xs font-bold transition-colors shadow-sm cursor-pointer select-none"
           >
-            <X className="w-3.5 h-3.5" />
+            <Download className="w-3.5 h-3.5" />
+            <span>Export</span>
           </button>
-        </div>
-      )}
+        }
+        className="mb-5"
+      />
+      {/* Page content */}
 
       {/* Global Toast */}
       {toastMessage && (
@@ -170,29 +168,7 @@ export function DaybookPage() {
         </div>
       )}
 
-      {/* 2. Page Header: Title and Export */}
-      <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#241814]">
-            Customer savings day book
-          </h2>
-          <p className="mt-0.5 text-xs text-[#7a6e67]">
-            {summary.date}
-          </p>
-        </div>
-
-        {/* Export Button */}
-        <button
-          type="button"
-          onClick={handleExport}
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#f6f2e9] border border-[#ded8cb] text-xs font-medium text-[#2c1b15] transition-colors shadow-2xs cursor-pointer select-none self-start sm:self-auto"
-        >
-          <Download className="w-3.5 h-3.5 text-[#7a6e67]" />
-          <span>Export</span>
-        </button>
-      </div>
-
-      {/* 3. Four Summary Stat Cards */}
+      {/* 3. Summary Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Card 1: Today's Customer Savings (Amber Card) */}
         <div className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-r from-[#d9aa5b] to-[#cca053] text-[#2c1b15] shadow-xs select-none flex flex-col justify-between">

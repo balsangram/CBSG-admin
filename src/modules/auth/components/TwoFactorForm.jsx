@@ -5,6 +5,7 @@ import useAuth from '../hooks/useAuth';
 import { validateOtpCode } from '../validation/auth.validation';
 import Button from '../../../components/common/Button';
 import { APP_CONFIG, ROUTES } from '../../../utils/constants';
+import { notify } from '../../../utils/notify';
 
 export function TwoFactorForm() {
   const navigate = useNavigate();
@@ -114,16 +115,20 @@ export function TwoFactorForm() {
 
     if (!validation.isValid) {
       setError(validation.errors.code || 'Please enter all 6 digits.');
+      notify.error('Please enter the complete 6-digit code.');
       return;
     }
 
     setIsSubmitting(true);
     try {
       await verifyTwoFactor(fullCode);
+      notify.success('Verification successful. Welcome back!');
       // On success, navigate to dashboard
       navigate(ROUTES.DASHBOARD, { replace: true });
     } catch (err) {
-      setError(err.message || `Invalid code. Please enter demo code ${APP_CONFIG.DEMO_OTP}.`);
+      const msg = err.message || `Invalid code. Please enter demo code ${APP_CONFIG.DEMO_OTP}.`;
+      setError(msg);
+      notify.error(msg);
     } finally {
       setIsSubmitting(false);
     }

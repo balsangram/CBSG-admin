@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn } from '../../utils/helpers';
-import Loader from './Loader';
+import ButtonLoader from './ButtonLoader';
 
 export function Button({
   children,
@@ -52,7 +52,10 @@ export function Button({
     >
       {loading ? (
         <>
-          <Loader size={size === 'sm' ? 'xs' : 'sm'} color="white" />
+          <ButtonLoader
+            size={size === 'sm' ? 'xs' : 'sm'}
+            color="white"
+          />
           <span>{children}</span>
         </>
       ) : (

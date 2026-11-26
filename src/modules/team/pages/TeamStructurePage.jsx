@@ -13,6 +13,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import OrgChartNode from '../components/OrgChartNode';
 import TeamTableView from '../components/TeamTableView';
 import AddMemberModal from '../components/AddMemberModal';
@@ -235,24 +236,21 @@ export function TeamStructurePage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-7xl mx-auto pb-16">
-        {/* Page Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-[#2c1b15] tracking-tight">Team structure</h1>
-            <p className="text-xs text-[#8f8278] mt-0.5">Team Lead → Executive Manager</p>
-          </div>
-
-          <div className="flex items-center gap-2.5">
+      <PageHeader
+        crumbs={['Home', 'Team & Incentives', 'Team Structure']}
+        title="Team structure"
+        subtitle="Team Lead → Executive Manager"
+        actions={
+          <>
             {/* View Mode Toggle: Org chart / Table */}
-            <div className="inline-flex p-1 bg-[#ede7dc] rounded-xl border border-[#ded5c7] text-xs">
+            <div className="inline-flex p-1 bg-white/10 rounded-xl border border-white/20 text-xs backdrop-blur-sm">
               <button
                 type="button"
                 onClick={() => setViewMode('org')}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
                   viewMode === 'org'
-                    ? 'bg-white text-[#2c1b15] shadow-xs'
-                    : 'text-[#8f8278] hover:text-[#2c1b15]'
+                    ? 'bg-white/20 text-white shadow-xs'
+                    : 'text-white/60 hover:text-white'
                 }`}
               >
                 Org chart
@@ -262,8 +260,8 @@ export function TeamStructurePage() {
                 onClick={() => setViewMode('table')}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
                   viewMode === 'table'
-                    ? 'bg-white text-[#2c1b15] shadow-xs'
-                    : 'text-[#8f8278] hover:text-[#2c1b15]'
+                    ? 'bg-white/20 text-white shadow-xs'
+                    : 'text-white/60 hover:text-white'
                 }`}
               >
                 Table
@@ -275,10 +273,10 @@ export function TeamStructurePage() {
               <button
                 type="button"
                 onClick={handleUndo}
-                className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-[#faf7f2] border border-[#e8e2d5] text-[#2c1b15] rounded-xl text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-semibold transition-colors backdrop-blur-sm cursor-pointer"
                 title="Undo last change"
               >
-                <Undo2 className="w-3.5 h-3.5 text-[#8f8278]" />
+                <Undo2 className="w-3.5 h-3.5" />
                 <span>Undo</span>
               </button>
             )}
@@ -287,10 +285,10 @@ export function TeamStructurePage() {
             <button
               type="button"
               onClick={handleResetHierarchy}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-[#faf7f2] border border-[#e8e2d5] text-[#61554d] rounded-xl text-xs font-semibold transition-all shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 border border-white/20 text-white/80 rounded-xl text-xs font-semibold transition-colors backdrop-blur-sm cursor-pointer"
               title="Reset to default hierarchy"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-[#8f8278]" />
+              <RotateCcw className="w-3.5 h-3.5" />
               <span className="hidden md:inline">Reset</span>
             </button>
 
@@ -298,9 +296,9 @@ export function TeamStructurePage() {
             <button
               type="button"
               onClick={() => setIsTargetModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-[#faf7f2] border border-[#e8e2d5] text-[#2c1b15] rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white/10 border border-white/20 text-white rounded-xl text-xs font-bold transition-colors backdrop-blur-sm cursor-pointer"
             >
-              <Award className="w-3.5 h-3.5 text-[#c88a29]" />
+              <Award className="w-3.5 h-3.5 text-[#f3e6d4]" />
               <span>Add target</span>
             </button>
 
@@ -308,13 +306,16 @@ export function TeamStructurePage() {
             <button
               type="button"
               onClick={() => setIsAddModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2c1b15] hover:bg-[#432b22] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#c88a29] hover:bg-[#d99a3d] text-[#2c1b15] rounded-xl text-xs font-bold transition-colors shadow-sm cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add member</span>
             </button>
-          </div>
-        </div>
+          </>
+        }
+        className="mb-5"
+      />
+      <div className="space-y-6 max-w-7xl mx-auto pb-16">
 
         {loading ? (
           <div className="flex items-center justify-center py-24 text-stone-500 gap-2">

@@ -5,13 +5,15 @@ import {
   X,
   FileCheck2,
   Send,
-  Loader2,
   Pencil,
   Trash2,
   Eye,
+  ArrowLeft,
 } from 'lucide-react';
 import { notify } from '../../../utils/notify';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
+import Loader from '../../../components/common/Loader';
 import { customerService } from '../services/customer.service';
 import { ROUTES } from '../../../utils/constants';
 
@@ -324,82 +326,85 @@ export function Customer360Page() {
   if (loading || loadError || !customer) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center gap-2 py-24 text-sm text-[#7a6e67]">
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Loading customer…
-            </>
-          ) : (
-            loadError || 'Customer not found.'
-          )}
-        </div>
+        {loading ? (
+          <Loader />
+        ) : (
+          <div className="flex items-center justify-center py-24 text-sm text-[#7a6e67]">
+            {loadError || 'Customer not found.'}
+          </div>
+        )}
       </DashboardLayout>
     );
   }
 
   return (
     <DashboardLayout>
-      {/* Page Header: Title and Actions */}
-      <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#241814]">
-            Customer 360
-          </h2>
-          <p className="mt-0.5 text-xs text-[#7a6e67]">
-            {customer.name}
-          </p>
-        </div>
-
-        {/* Right Action Controls: Customer Picker + Message */}
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
-          {editing ? (
-            <>
+      <PageHeader
+        crumbs={['Home', 'Customers', 'Customer 360']}
+        title="Customer 360"
+        subtitle={customer.name}
+        leading={
+          <button
+            type="button"
+            onClick={() => navigate(ROUTES.CUSTOMERS)}
+            title="Back to customer records"
+            aria-label="Back to customer records"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/10 border border-white/20 text-white transition-colors backdrop-blur-sm hover:bg-white/20 cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+        }
+        actions={
+          <>
+            {editing ? (
+              <>
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-medium transition-colors backdrop-blur-sm cursor-pointer select-none disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#c88a29] hover:bg-[#d99a3d] text-[#2c1b15] text-xs font-bold transition-colors shadow-sm cursor-pointer select-none disabled:opacity-60"
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+              </>
+            ) : (
               <button
                 type="button"
-                onClick={cancelEdit}
-                disabled={saving}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-[#f6f2e9] border border-[#ded8cb] text-xs font-medium text-[#2c1b15] transition-colors shadow-2xs cursor-pointer select-none disabled:opacity-60"
+                onClick={startEdit}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-medium transition-colors backdrop-blur-sm cursor-pointer select-none"
               >
-                Cancel
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Edit</span>
               </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#2c1b15] hover:bg-[#1a0f0b] text-white text-xs font-medium transition-colors shadow-2xs cursor-pointer select-none disabled:opacity-60"
-              >
-                {saving ? 'Saving…' : 'Save'}
-              </button>
-            </>
-          ) : (
+            )}
             <button
               type="button"
-              onClick={startEdit}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-[#f6f2e9] border border-[#ded8cb] text-xs font-medium text-[#2c1b15] transition-colors shadow-2xs cursor-pointer select-none"
+              onClick={() => setPendingDelete(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-rose-400/20 border border-rose-300/40 text-rose-100 text-xs font-medium transition-colors backdrop-blur-sm cursor-pointer select-none hover:bg-rose-400/30"
             >
-              <Pencil className="w-3.5 h-3.5 text-[#7a6e67]" />
-              <span>Edit</span>
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete</span>
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setPendingDelete(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-rose-50 border border-rose-200 text-xs font-medium text-rose-700 transition-colors shadow-2xs cursor-pointer select-none"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Delete</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowMessageModal(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white hover:bg-[#f6f2e9] border border-[#ded8cb] text-xs font-medium text-[#2c1b15] transition-colors shadow-2xs cursor-pointer select-none"
-          >
-            <Mail className="w-3.5 h-3.5 text-[#7a6e67]" />
-            <span>Message</span>
-          </button>
-        </div>
-      </div>
+            <button
+              type="button"
+              onClick={() => setShowMessageModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-medium transition-colors backdrop-blur-sm cursor-pointer select-none"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              <span>Message</span>
+            </button>
+          </>
+        }
+        className="mb-5"
+      />
 
       {/* 3. Main Customer Profile Card */}
       <div className={`bg-white rounded-2xl border p-6 shadow-2xs mb-6 ${editing ? 'border-[#c88a29]' : 'border-[#e8e2d5]'}`}>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import DataTable from '../../../components/common/DataTable';
 import { Users, ShieldCheck, Search, Plus, Edit2, Power } from 'lucide-react';
 import { usersService } from '../services/users.service';
@@ -127,27 +128,23 @@ export function UsersRolesPage() {
 
   return (
     <DashboardLayout pageTitle="User management & permissions">
-      <div className="space-y-6">
-        {/* Top Header Row with Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-bold font-serif text-[#2c1b15]">
-              User management & permissions
-            </h1>
-            <p className="text-xs text-[#8f8278] mt-0.5">
-              Role-based access control, credentials, and staff directory
-            </p>
-          </div>
-
+      <PageHeader
+        crumbs={['Home', 'Administration', 'Users & Roles']}
+        title="User management & permissions"
+        subtitle="Role-based access control, credentials, and staff directory"
+        actions={
           <button
             type="button"
             onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#2c1b15] hover:bg-[#432b22] text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#c88a29] hover:bg-[#d99a3d] text-[#2c1b15] text-xs font-bold transition-colors shadow-sm cursor-pointer select-none"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Create user</span>
           </button>
-        </div>
+        }
+        className="mb-5"
+      />
+      <div className="space-y-6">
 
         {/* 3 KPI Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -8,12 +8,12 @@ import {
   Sliders,
 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import CollectionTrendsChart from '../components/CollectionTrendsChart';
 import { performanceOverviewData } from '../services/dashboard.service';
 
 export function DashboardPage() {
   const [data] = useState(performanceOverviewData);
-  const [showSignedInAlert, setShowSignedInAlert] = useState(true);
   const [activeModal, setActiveModal] = useState(null); // 'kyc', 'approvals', 'details', 'export'
   const [alertMessage, setAlertMessage] = useState('');
 
@@ -29,26 +29,6 @@ export function DashboardPage() {
 
   return (
     <DashboardLayout>
-      {/* 1. Signed in status notification banner */}
-      {showSignedInAlert && (
-        <div className="mb-4 py-2 px-3.5 bg-white/70 border border-[#e8e2d5] rounded-xl flex items-center justify-between text-xs text-[#2c1b15] shadow-2xs animate-fadeIn">
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-[10px] font-bold">
-              ✓
-            </span>
-            <span className="font-medium">Signed in</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowSignedInAlert(false)}
-            className="text-[#968a80] hover:text-[#2c1b15] p-1 cursor-pointer"
-            aria-label="Dismiss signed in alert"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
       {/* Global alert toast */}
       {alertMessage && (
         <div className="mb-4 py-2.5 px-4 bg-[#e7f7ed] border border-emerald-200 text-emerald-900 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs">
@@ -63,50 +43,46 @@ export function DashboardPage() {
         </div>
       )}
 
-      {/* 2. Page Header: Title, Subtitle and Top Actions */}
-      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#241814]">
-            Performance Overview
-          </h2>
-          <p className="mt-0.5 text-xs text-[#7a6e67]">
-            Collections, growth and portfolio insights — all in one place
-          </p>
-        </div>
+      {/* Gradient page header — breadcrumb + title + actions */}
+      <PageHeader
+        crumbs={['Home', 'Dashboard', 'Performance Overview']}
+        title="Performance Overview"
+        subtitle="Collections, growth and portfolio insights — all in one place"
+        actions={
+          <>
+            {/* Refresh Button */}
+            <button
+              type="button"
+              onClick={handleRefresh}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-xs font-medium text-white hover:bg-white/20 transition-colors backdrop-blur-sm cursor-pointer select-none"
+            >
+              <RotateCcw className="w-3 h-3 text-[#f3e6d4]" />
+              <span>Refresh</span>
+            </button>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Refresh Button */}
-          <button
-            type="button"
-            onClick={handleRefresh}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#ded8cb] text-xs font-medium text-[#2c1b15] hover:bg-[#f6f2e9] transition-colors shadow-2xs cursor-pointer select-none"
-          >
-            <RotateCcw className="w-3 h-3 text-[#7a6e67]" />
-            <span>Refresh</span>
-          </button>
+            {/* Reports Button */}
+            <button
+              type="button"
+              onClick={() => setActiveModal('details')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-xs font-medium text-white hover:bg-white/20 transition-colors backdrop-blur-sm cursor-pointer select-none"
+            >
+              <Sliders className="w-3 h-3 text-[#f3e6d4]" />
+              <span>Reports</span>
+            </button>
 
-          {/* Reports Button */}
-          <button
-            type="button"
-            onClick={() => setActiveModal('details')}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#ded8cb] text-xs font-medium text-[#2c1b15] hover:bg-[#f6f2e9] transition-colors shadow-2xs cursor-pointer select-none"
-          >
-            <Sliders className="w-3 h-3 text-[#7a6e67]" />
-            <span>Reports</span>
-          </button>
-
-          {/* Export Data Button */}
-          <button
-            type="button"
-            onClick={handleExport}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#2c1b15] hover:bg-[#1a0f0b] text-white text-xs font-medium transition-colors shadow-2xs cursor-pointer select-none"
-          >
-            <Download className="w-3 h-3" />
-            <span>Export data</span>
-          </button>
-        </div>
-      </div>
+            {/* Export Data Button */}
+            <button
+              type="button"
+              onClick={handleExport}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#c88a29] hover:bg-[#d99a3d] text-[#2c1b15] text-xs font-bold transition-colors shadow-sm cursor-pointer select-none"
+            >
+              <Download className="w-3 h-3" />
+              <span>Export data</span>
+            </button>
+          </>
+        }
+        className="mb-6"
+      />
 
       {/* 3. Main Dashboard Grid (2 Columns) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">

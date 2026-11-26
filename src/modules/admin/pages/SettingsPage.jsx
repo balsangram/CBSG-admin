@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import { X, Check } from 'lucide-react';
 
 export function SettingsPage() {
@@ -60,6 +61,11 @@ export function SettingsPage() {
 
   return (
     <DashboardLayout pageTitle="Settings">
+      <PageHeader
+        crumbs={['Home', 'Account', 'Settings']}
+        title="Settings"
+        className="mb-5"
+      />
       <div className="space-y-5">
         {/* Top Dismissible Reporting Notification Banner */}
         {showNotification && (
@@ -85,10 +91,8 @@ export function SettingsPage() {
           </div>
         )}
 
-        {/* Header & Save Button */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold font-serif text-[#2c1b15]">Settings</h1>
-
+        {/* Save controls */}
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
             {saveSuccess && (
               <span className="text-xs text-[#0d7a3e] font-semibold flex items-center gap-1">

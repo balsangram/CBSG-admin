@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Download, X } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import ReportCard from '../components/ReportCard';
 import ReportPreviewModal from '../components/ReportPreviewModal';
 import { reportsService } from '../services/reports.service';
@@ -17,6 +18,11 @@ export function ReportsPage() {
 
   return (
     <DashboardLayout>
+      <PageHeader
+        crumbs={['Home', 'Reports', 'Reports & Analytics']}
+        title="Reports & analytics"
+        className="mb-5"
+      />
       <div className="space-y-5 max-w-7xl mx-auto pb-16">
         {/* Top Notification Banner (matching exact screenshot) */}
         {bannerVisible && (
@@ -45,15 +51,9 @@ export function ReportsPage() {
           </div>
         )}
 
-        {/* Page Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-          <div>
-            <h1 className="text-2xl font-bold text-[#2c1b15] tracking-tight">Reports & analytics</h1>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Format Selector Pills: PDF, Excel, CSV */}
-            <div className="inline-flex p-1 bg-white border border-[#e8e2d5] rounded-xl text-xs shadow-2xs">
+        {/* Format selector + export */}
+        <div className="flex items-center justify-end gap-3">
+          <div className="inline-flex p-1 bg-white border border-[#e8e2d5] rounded-xl text-xs shadow-2xs">
               {['PDF', 'Excel', 'CSV'].map((format) => (
                 <button
                   key={format}
@@ -79,7 +79,6 @@ export function ReportsPage() {
               <Download className="w-3.5 h-3.5" />
               <span>Export all reports</span>
             </button>
-          </div>
         </div>
 
         {/* 6 Report Cards Grid: 2 rows x 3 columns */}

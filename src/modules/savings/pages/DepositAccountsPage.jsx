@@ -1,17 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import {
   Search,
-  X,
   ChevronDown,
 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import { mockDepositAccounts } from '../services/savings.service';
 
 export function DepositAccountsPage() {
   const [accounts] = useState(mockDepositAccounts);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-  const [showSignedInAlert, setShowSignedInAlert] = useState(true);
+
 
   // Filter accounts
   const filteredAccounts = useMemo(() => {
@@ -34,66 +34,39 @@ export function DepositAccountsPage() {
 
   return (
     <DashboardLayout>
-      {/* 1. Signed in status notification banner */}
-      {showSignedInAlert && (
-        <div className="mb-4 py-2 px-3.5 bg-white/70 border border-[#e8e2d5] rounded-xl flex items-center justify-between text-xs text-[#2c1b15] shadow-2xs animate-fadeIn">
-          <div className="flex items-center gap-2">
-            <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-[10px] font-bold">
-              ✓
-            </span>
-            <span className="font-medium">Signed in</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowSignedInAlert(false)}
-            className="text-[#968a80] hover:text-[#2c1b15] p-1 cursor-pointer"
-            aria-label="Dismiss signed in alert"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
-
-      {/* 2. Page Header */}
-      <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#241814]">
-            Deposit & savings accounts
-          </h2>
-          <p className="mt-0.5 text-xs text-[#7a6e67]">
-            14 accounts · ₹7.72 L
-          </p>
-        </div>
-
-        {/* Filter controls */}
-        <div className="flex items-center gap-3 self-start sm:self-auto">
-          {/* Quick Search */}
-          <div className="relative w-48 sm:w-64">
-            <Search className="w-3.5 h-3.5 text-[#8c8076] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Filter account or client..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white text-[#2c1b15] placeholder:text-[#94887e] text-xs rounded-full border border-[#ded8cb] pl-8 pr-3 py-1.5 outline-none shadow-2xs"
-            />
-          </div>
-
-          {/* Status Filter */}
-          <div className="relative">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none bg-white text-xs font-semibold text-[#2c1b15] border border-[#ded8cb] rounded-full pl-3 pr-7 py-1.5 shadow-2xs outline-none cursor-pointer"
-            >
-              <option value="All">All statuses</option>
-              <option value="Active">Active</option>
-              <option value="Nearing maturity">Nearing maturity</option>
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-[#8c8076] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        crumbs={['Home', 'Savings', 'Deposit Accounts']}
+        title="Deposit & savings accounts"
+        subtitle="14 accounts · ₹7.72 L"
+        actions={
+          <>
+            <div className="relative w-48 sm:w-64">
+              <Search className="w-3.5 h-3.5 text-white/50 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Filter account or client..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white/10 text-white placeholder:text-white/50 text-xs rounded-full border border-white/20 pl-8 pr-3 py-2 outline-none backdrop-blur-sm focus:border-white/40"
+              />
+            </div>
+            <div className="relative">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="appearance-none bg-white/10 text-xs font-semibold text-white border border-white/20 rounded-full pl-3 pr-7 py-2 outline-none backdrop-blur-sm cursor-pointer [&>option]:text-[#2c1b15]"
+              >
+                <option value="All">All statuses</option>
+                <option value="Active">Active</option>
+                <option value="Nearing maturity">Nearing maturity</option>
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 text-white/50 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </>
+        }
+        className="mb-5"
+      />
+      {/* Page content */}
 
       {/* 3. Deposit Accounts Table */}
       <div className="bg-white rounded-2xl border border-[#e8e2d5] shadow-2xs overflow-hidden">

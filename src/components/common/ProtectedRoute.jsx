@@ -10,9 +10,9 @@ export function ProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-3">
-        <Loader size="lg" color="blue" />
-        <p className="text-sm text-slate-500 font-medium animate-pulse">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-cream-100 gap-3">
+        <Loader size="lg" color="amber" />
+        <p className="text-sm text-ink-muted font-medium">
           Verifying security authorization...
         </p>
       </div>

@@ -11,6 +11,8 @@ import {
   FileText,
 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
+import SkeletonCard from '../../../components/common/SkeletonCard';
 import { notify } from '../../../utils/notify';
 import {
   initialSchemeConfig,
@@ -220,96 +222,93 @@ export function SchemeMasterPage() {
 
   return (
     <DashboardLayout>
-      <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#241814]">
-            Savings scheme master
-          </h2>
-          <p className="mt-0.5 text-xs text-[#7a6e67]">
-            {showForm ? (editing ? 'Edit scheme details' : 'Create your savings scheme') : 'Published scheme overview'}
-          </p>
-        </div>
-
-        {showForm && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={handleReset}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-[#7a6e67] hover:text-[#2c1b15] cursor-pointer"
-            >
-              <RotateCcw className="w-3 h-3" />
-              <span>Reset</span>
-            </button>
-
-            {!hasPlan && (
+      <PageHeader
+        crumbs={['Home', 'Savings', 'Scheme Master']}
+        title="Savings scheme master"
+        subtitle={showForm ? (editing ? 'Edit scheme details' : 'Create your savings scheme') : 'Published scheme overview'}
+        actions={
+          showForm ? (
+            <>
               <button
                 type="button"
-                onClick={handleNewScheme}
-                disabled={loadingPlan}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#2c1b15] hover:bg-[#1a0f0b] text-white text-xs font-medium transition-colors shadow-2xs cursor-pointer select-none disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={handleReset}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-white/70 hover:text-white cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>New scheme</span>
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset</span>
               </button>
-            )}
 
-            {hasPlan && editing && (
+              {!hasPlan && (
+                <button
+                  type="button"
+                  onClick={handleNewScheme}
+                  disabled={loadingPlan}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-medium transition-colors backdrop-blur-sm cursor-pointer select-none disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>New scheme</span>
+                </button>
+              )}
+
+              {hasPlan && editing && (
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  disabled={saving}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-medium transition-colors backdrop-blur-sm cursor-pointer select-none"
+                >
+                  Cancel
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={() => setEditing(false)}
-                disabled={saving}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#f6f2e9] border border-[#ded8cb] text-xs font-medium text-[#2c1b15] transition-colors shadow-2xs cursor-pointer select-none"
+                onClick={handleSave}
+                disabled={saving || loadingPlan}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#c88a29] hover:bg-[#d99a3d] text-[#2c1b15] text-xs font-bold transition-colors shadow-sm cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Cancel
+                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                <span>{saving ? 'Saving…' : planId ? 'Save changes' : 'Create plan'}</span>
               </button>
-            )}
-
+            </>
+          ) : (
             <button
               type="button"
-              onClick={handleSave}
-              disabled={saving || loadingPlan}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#c88a29] hover:bg-[#b57a1f] text-white text-xs font-semibold transition-colors shadow-2xs cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => setEditing(true)}
+              title="Edit scheme"
+              aria-label="Edit scheme"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-medium transition-colors backdrop-blur-sm cursor-pointer select-none"
             >
-              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-              <span>{saving ? 'Saving…' : planId ? 'Save changes' : 'Create plan'}</span>
+              <Pencil className="w-3.5 h-3.5" />
+              <span>Edit scheme</span>
             </button>
-          </div>
-        )}
-      </div>
+          )
+        }
+        className="mb-5"
+      />
 
       {loadingPlan ? (
-        <div className="flex items-center justify-center py-24 text-[#7a6e67]">
-          <Loader2 className="w-5 h-5 animate-spin" />
+        <div className="max-w-5xl space-y-5">
+          <SkeletonCard />
+          <SkeletonCard />
         </div>
       ) : !showForm ? (
-        /* ================= VIEW: Single scheme card ================= */
-        <div className="max-w-5xl">
+        /* ================= VIEW: Single scheme card (full width) ================= */
+        <div>
           <div className="relative overflow-hidden rounded-3xl border border-[#e8e2d5] bg-white shadow-sm">
-            <div className="absolute inset-x-0 top-0 h-28 bg-linear-to-br from-[#2c1b15] via-[#3d2a22] to-[#c88a29]" />
-
             <div className="relative px-5 pt-5 sm:px-7 sm:pt-6">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <span className="inline-flex items-center rounded-full bg-white/15 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#f3e6d4] ring-1 ring-white/20">
+                  <span className="inline-flex items-center rounded-full bg-[#f3efe6] px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#7a6e67] ring-1 ring-[#e8e2d5]">
                     {scheme.planType || 'Plan'}
                   </span>
-                  <h3 className="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-white truncate">
+                  <h3 className="mt-3 text-xl sm:text-2xl font-bold tracking-tight text-[#2c1b15] truncate">
                     {scheme.name}
                   </h3>
-                  <p className="mt-1 text-xs text-[#e8d5c4]">
+                  <p className="mt-1 text-xs text-[#8a7e75]">
                     Start saving from ₹{Number(scheme.minInvestment).toLocaleString('en-IN')} · {scheme.monthlyInterest}% monthly
                   </p>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setEditing(true)}
-                  title="Edit scheme"
-                  aria-label="Edit scheme"
-                  className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white ring-1 ring-white/25 hover:bg-white hover:text-[#2c1b15] transition-colors cursor-pointer"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
               </div>
             </div>
 

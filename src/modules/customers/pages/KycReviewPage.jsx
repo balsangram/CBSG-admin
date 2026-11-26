@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import { mockKycQueueData, kycService } from '../services/kyc.service';
 import { ROUTES } from '../../../utils/constants';
 
@@ -361,6 +362,37 @@ export function KycReviewPage() {
 
   return (
     <DashboardLayout>
+      <PageHeader
+        crumbs={['Home', 'Customers', 'KYC Review']}
+        title="KYC Review"
+        subtitle={`${customerName} · ${customerPhone}${customerEmail ? ` · ${customerEmail}` : ''}`}
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={goBack}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/10 border border-white/20 text-white text-xs font-medium transition-colors backdrop-blur-sm cursor-pointer select-none"
+              aria-label="Back to KYC queue"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back</span>
+            </button>
+            {isRealRecord && kyc && !allVerified && (
+              <button
+                type="button"
+                disabled={isSubmitting || hasRejected}
+                title={hasRejected ? 'Resolve rejected sections first' : undefined}
+                onClick={approveAll}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500/90 hover:bg-emerald-500 text-white text-xs font-bold transition-colors shadow-sm cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                {isSubmitting ? 'Processing…' : 'Approve All Sections'}
+              </button>
+            )}
+          </>
+        }
+        className="mb-4"
+      />
       {error && (
         <div className="mb-4 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
           {error}
@@ -375,42 +407,9 @@ export function KycReviewPage() {
       )}
 
       <div className={isRealRecord ? 'flex h-[calc(100vh-7.5rem)] min-h-0 flex-col' : ''}>
-      {/* Header */}
-      <div className="mb-4 flex shrink-0 items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={goBack}
-            className="p-2 rounded-xl border border-[#ded8cb] text-[#5e5148] hover:bg-[#faf8f4] cursor-pointer"
-            aria-label="Back to KYC queue"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#241814]">
-              KYC Review
-            </h2>
-            <p className="mt-0.5 text-xs text-[#7a6e67]">
-              {customerName} · {customerPhone}
-              {customerEmail ? ` · ${customerEmail}` : ''}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {isRealRecord && kyc && !allVerified && (
-            <button
-              type="button"
-              disabled={isSubmitting || hasRejected}
-              title={hasRejected ? 'Resolve rejected sections first' : undefined}
-              onClick={approveAll}
-              className="inline-flex shrink-0 items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold cursor-pointer shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <CheckCircle className="w-4 h-4" />
-              {isSubmitting ? 'Processing…' : 'Approve All Sections'}
-            </button>
-          )}
-          <StatusBadge status={isRealRecord ? overallStatus : record.kycStatus} />
-        </div>
+      {/* Status row */}
+      <div className="mb-4 flex shrink-0 items-center justify-end">
+        <StatusBadge status={isRealRecord ? overallStatus : record.kycStatus} />
       </div>
 
       {/* ===== Real API mode: section kanban ===== */}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, X } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import MonthEndCloseModal from '../components/MonthEndCloseModal';
 import {
   BENEFICIARIES_LIST,
@@ -50,6 +51,11 @@ export function IncentiveLedgerPage() {
 
   return (
     <DashboardLayout>
+      <PageHeader
+        crumbs={['Home', 'Team & Incentives', 'Incentive Ledger']}
+        title="Incentive ledger"
+        className="mb-5"
+      />
       <div className="space-y-5 max-w-7xl mx-auto pb-16">
         {/* Top Notification Banner (matching exact screenshot) */}
         {bannerVisible && (
@@ -78,15 +84,9 @@ export function IncentiveLedgerPage() {
           </div>
         )}
 
-        {/* Page Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-          <div>
-            <h1 className="text-2xl font-bold text-[#2c1b15] tracking-tight">Incentive ledger</h1>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Beneficiary Filter Dropdown ("Everyone") */}
-            <div className="relative">
+        {/* Beneficiary filter + month-end close */}
+        <div className="flex items-center justify-end gap-3">
+          <div className="relative">
               <select
                 value={selectedBeneficiary}
                 onChange={(e) => setSelectedBeneficiary(e.target.value)}
@@ -109,7 +109,6 @@ export function IncentiveLedgerPage() {
             >
               Run month-end close
             </button>
-          </div>
         </div>
 
         {/* 3 Summary Metrics Cards */}

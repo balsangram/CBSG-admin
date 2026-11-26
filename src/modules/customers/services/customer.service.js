@@ -17,9 +17,15 @@ const requestConfig = (photoFile) => {
 };
 
 export const customerService = {
-  async getCustomers() {
-    const { data } = await api.get('/admin/customers');
-    return data?.data || [];
+  async getCustomers(params = {}) {
+    const { data } = await api.get('/admin/customers', { params });
+    return (
+      data?.data || {
+        customers: [],
+        pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+        meta: { total: 0 },
+      }
+    );
   },
 
   async getCustomer(id) {

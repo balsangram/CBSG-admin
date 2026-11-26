@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { X, Building2, MapPin, Check, ChevronDown } from 'lucide-react';
 import useClickOutside from '../../../hooks/useClickOutside';
 import { INDIAN_CITIES } from '../data/indian-cities';
+import { notify } from '../../../utils/notify';
 
 const RESULT_LIMIT = 80;
 
@@ -104,6 +105,7 @@ export function AddBranchModal({ isOpen, onClose, onAddBranch }) {
     e.preventDefault();
     if (!formData.name.trim() || !formData.city.trim()) {
       setError('Select a city from the list.');
+      notify.error('Branch name and city are required.');
       return;
     }
 
@@ -122,7 +124,9 @@ export function AddBranchModal({ isOpen, onClose, onAddBranch }) {
         onClose();
       }, 800);
     } catch (err) {
-      setError(err.message || 'Failed to create branch.');
+      const msg = err.message || 'Failed to create branch.';
+      setError(msg);
+      notify.error(msg);
     } finally {
       setIsSubmitting(false);
     }

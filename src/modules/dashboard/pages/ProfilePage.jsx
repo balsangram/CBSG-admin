@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { BadgeCheck, Camera, Loader2, Mail, Pencil, Phone, Shield } from 'lucide-react';
 import { toast } from 'react-toastify';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import useAuth from '../../auth/hooks/useAuth';
 import { profileService } from '../services/profile.service';
 
@@ -137,6 +138,12 @@ export function ProfilePage() {
 
   return (
     <DashboardLayout pageTitle="Staff Profile">
+      <PageHeader
+        crumbs={['Home', 'Account', 'Profile']}
+        title="Staff Profile"
+        subtitle={profile?.email || 'Your CBSG staff account'}
+        className="mb-5"
+      />
       <div className="max-w-4xl mx-auto space-y-6">
         {error && (
           <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">

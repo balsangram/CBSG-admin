@@ -11,12 +11,17 @@ export function Logo({
   return (
     <div className={cn('inline-flex items-center gap-3 select-none', className)}>
       {/* CBSG Bar Chart Logo Mark */}
-      <div className="relative flex items-end justify-center w-8 h-8 shrink-0">
+      <div
+        className={cn(
+          'relative flex items-end justify-center w-9 h-9 rounded-xl shrink-0 transition-shadow',
+          isDark ? 'bg-white/10 ring-1 ring-white/15' : 'bg-cream-200/70 ring-1 ring-cream-line'
+        )}
+      >
         <svg
           viewBox="0 0 32 32"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full drop-shadow-sm"
+          className="w-[72%] h-[72%] drop-shadow-sm"
         >
           <defs>
             <linearGradient id="cbsgGrad" x1="0%" y1="100%" x2="100%" y2="0%">
@@ -29,7 +34,7 @@ export function Logo({
               <stop offset="100%" stopColor="#d97706" />
             </linearGradient>
           </defs>
-
+        -
           {/* Bar 1 */}
           <rect x="4" y="18" width="4.5" height="10" rx="1.5" fill="url(#cbsgGrad)" />
           {/* Bar 2 */}
@@ -51,29 +56,27 @@ export function Logo({
 
       {variant !== 'icon-only' && (
         <div className="flex flex-col">
-          <div className="flex items-baseline gap-1.5 leading-none">
-            <span
-              className={cn(
-                'font-extrabold tracking-wider',
-                size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-xl' : 'text-base',
-                isDark ? 'text-white' : 'text-slate-900'
-              )}
-            >
-              CBSG
-            </span>
-            <span
-              className={cn(
-                'font-normal leading-none',
-                size === 'sm' ? 'text-xs' : 'text-xs',
-                isDark ? 'text-amber-100/80' : 'text-slate-600'
-              )}
-            >
-              Finance Limited
-            </span>
-          </div>
           <span
             className={cn(
-              'font-semibold uppercase tracking-widest mt-1',
+              'font-extrabold tracking-wider leading-none',
+              size === 'sm' ? 'text-sm' : size === 'lg' ? 'text-xl' : 'text-base',
+              isDark ? 'text-white' : 'text-slate-900'
+            )}
+          >
+            CBSG
+          </span>
+          <span
+            className={cn(
+              'font-normal leading-tight mt-0.5',
+              size === 'sm' ? 'text-[10px]' : 'text-[11px]',
+              isDark ? 'text-amber-100/80' : 'text-slate-600'
+            )}
+          >
+            Finance Limited
+          </span>
+          <span
+            className={cn(
+              'font-semibold uppercase tracking-widest mt-0.5',
               size === 'sm' ? 'text-[9px]' : 'text-[10px]',
               isDark ? 'text-amber-200/60' : 'text-slate-600'
             )}

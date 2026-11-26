@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, ChevronDown, Upload, X } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import DataTable from '../../../components/common/DataTable';
 import TransactionDetailModal from '../components/TransactionDetailModal';
 import { transactionsService } from '../services/transactions.service';
@@ -99,6 +100,22 @@ export function TransactionLogsPage() {
 
   return (
     <DashboardLayout>
+      <PageHeader
+        crumbs={['Home', 'Reports', 'Transaction Logs']}
+        title="Transaction logs"
+        subtitle={`${filteredTransactions.length} of ${transactions.length} transactions`}
+        actions={
+          <button
+            type="button"
+            onClick={handleExportCSV}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#c88a29] hover:bg-[#d99a3d] text-[#2c1b15] text-xs font-bold transition-colors shadow-sm cursor-pointer select-none"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>Export</span>
+          </button>
+        }
+        className="mb-5"
+      />
       <div className="space-y-4 max-w-7xl mx-auto pb-16">
         {/* Top Notification Banner (matching exact screenshot) */}
         {bannerVisible && (
@@ -126,26 +143,6 @@ export function TransactionLogsPage() {
             </button>
           </div>
         )}
-
-        {/* Page Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-          <div>
-            <h1 className="text-2xl font-bold text-[#2c1b15] tracking-tight">Transaction logs</h1>
-            <p className="text-xs text-[#8f8278] mt-0.5">
-              {filteredTransactions.length} of {transactions.length} transactions
-            </p>
-          </div>
-
-          {/* Export Button */}
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white hover:bg-[#faf7f2] border border-[#e8e2d5] text-[#2c1b15] rounded-xl text-xs font-semibold shadow-2xs transition-all cursor-pointer"
-          >
-            <Upload className="w-3.5 h-3.5 text-[#8f8278]" />
-            <span>Export</span>
-          </button>
-        </div>
 
         {/* Transaction Table Card */}
         <div className="bg-white rounded-2xl border border-[#e8e2d5] shadow-2xs overflow-hidden">

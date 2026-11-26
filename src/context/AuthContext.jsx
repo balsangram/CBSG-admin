@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { AuthContext } from './AuthContextInstance';
 import authService from '../modules/auth/services/auth.service';
 import storageService from '../services/storage.service';
@@ -27,8 +27,16 @@ export function AuthProvider({ children }) {
     }
   });
 
-  const [loading] = useState(false);
+  // True during initial hydration so ProtectedRoute shows the loader on refresh
+  const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
+
+  useEffect(() => {
+    // Auth state is read synchronously from storage in the initializer;
+    // keep the splash loader visible briefly so refresh shows feedback.
+    const timer = setTimeout(() => setLoading(false), 600);
+    return () => clearTimeout(timer);
+  }, []);
 
   /**
    * Step 1: Sign in with credentials

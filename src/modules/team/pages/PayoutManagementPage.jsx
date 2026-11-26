@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import PayoutReviewModal from '../components/PayoutReviewModal';
 import { payoutsService } from '../services/payouts.service';
 
@@ -31,6 +32,11 @@ export function PayoutManagementPage() {
 
   return (
     <DashboardLayout>
+      <PageHeader
+        crumbs={['Home', 'Team & Incentives', 'Payout Management']}
+        title="Payout management"
+        className="mb-5"
+      />
       <div className="space-y-5 max-w-7xl mx-auto pb-16">
         {/* Top Notification Banner (matching exact screenshot) */}
         {bannerVisible && (
@@ -59,13 +65,8 @@ export function PayoutManagementPage() {
           </div>
         )}
 
-        {/* Page Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-          <div>
-            <h1 className="text-2xl font-bold text-[#2c1b15] tracking-tight">Payout management</h1>
-          </div>
-
-          {/* Filter Tabs: All, Customers, EM, Team Leads */}
+        {/* Filter Tabs: All, Customers, EM, Team Leads */}
+        <div className="flex items-center justify-end">
           <div className="inline-flex p-1 bg-white border border-[#e8e2d5] rounded-xl text-xs shadow-2xs">
             {['All', 'Customers', 'EM', 'Team Leads'].map((tab) => (
               <button

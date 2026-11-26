@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import { Search } from 'lucide-react';
 import { auditService } from '../services/audit.service';
 
@@ -22,27 +23,25 @@ export function AuditLogPage() {
 
   return (
     <DashboardLayout pageTitle="Audit log">
-      <div className="space-y-5">
-        {/* Header & Search */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-bold font-serif text-[#2c1b15]">Audit log</h1>
-            <p className="text-xs text-[#8f8278] mt-0.5">
-              Immutable record with before / after values
-            </p>
-          </div>
-
+      <PageHeader
+        crumbs={['Home', 'Administration', 'Audit Log']}
+        title="Audit log"
+        subtitle="Immutable record with before / after values"
+        actions={
           <div className="relative w-full sm:w-64">
-            <Search className="w-3.5 h-3.5 text-[#8f8278] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-white/50 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 bg-white border border-[#e8e2d5] rounded-xl text-xs text-[#2c1b15] placeholder-[#8f8278] focus:outline-none focus:border-[#c88a29] transition-colors"
+              className="w-full pl-8 pr-3 py-2 bg-white/10 border border-white/20 rounded-xl text-xs text-white placeholder-white/50 focus:outline-none focus:border-white/40 backdrop-blur-sm transition-colors"
             />
           </div>
-        </div>
+        }
+        className="mb-5"
+      />
+      <div className="space-y-5">
 
         {/* Audit Log Table */}
         <div className="bg-white rounded-2xl border border-[#e8e2d5] p-5 shadow-xs overflow-hidden">

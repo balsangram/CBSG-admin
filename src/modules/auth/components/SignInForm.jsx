@@ -6,6 +6,7 @@ import { validateSignIn } from '../validation/auth.validation';
 import Button from '../../../components/common/Button';
 import Input from '../../../components/common/Input';
 import { APP_CONFIG, ROUTES } from '../../../utils/constants';
+import { notify } from '../../../utils/notify';
 
 export function SignInForm() {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ export function SignInForm() {
     const validation = validateSignIn(formData);
     if (!validation.isValid) {
       setErrors(validation.errors);
+      notify.error('Please fix the highlighted fields.');
       return;
     }
 
@@ -53,10 +55,13 @@ export function SignInForm() {
     try {
       // Authenticate step 1
       await login(formData.email, formData.password);
+      notify.success('Credentials verified. Enter your 2FA code.');
       // Navigate strictly to two-factor verification
       navigate(ROUTES.TWO_FACTOR);
     } catch (err) {
-      setServerError(err.message || 'Authentication failed. Please verify credentials.');
+      const msg = err.message || 'Authentication failed. Please verify credentials.';
+      setServerError(msg);
+      notify.error(msg);
     } finally {
       setIsSubmitting(false);
     }

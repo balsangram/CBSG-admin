@@ -37,13 +37,18 @@ export function DataTable({
       className={
         bare
           ? ''
-          : 'bg-white rounded-2xl border border-[#e8e2d5] shadow-2xs overflow-hidden'
+          : 'rounded-2xl border border-[#e8d9bd] overflow-hidden shadow-[0_1px_2px_rgba(44,27,21,0.05),0_8px_24px_rgba(200,138,41,0.10)]'
+      }
+      style={
+        bare
+          ? undefined
+          : { backgroundColor: '#faf0da' }
       }
     >
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto bg-white/70">
         <table className="w-full text-left text-xs">
           <thead>
-            <tr className="border-b border-[#f3efe6] text-[10.5px] uppercase tracking-wider text-[#968a80]">
+            <tr className="border-b border-[#ecd9b8] bg-[#f3e7cf]/70 text-[10.5px] uppercase tracking-wider text-[#8a6d3b]">
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -58,7 +63,7 @@ export function DataTable({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#f5f1e8]">
+          <tbody className="divide-y divide-[#f0e4c8]">
             {data.length === 0 ? (
               <tr>
                 <td
@@ -74,7 +79,7 @@ export function DataTable({
                   key={row[rowKey]}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                   className={cn(
-                    'hover:bg-[#faf7f0]/60 transition-colors',
+                    'transition-colors hover:bg-[#f6ecd4]',
                     onRowClick && 'cursor-pointer',
                     typeof rowClassName === 'function'
                       ? rowClassName(row)

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Building2, X, Loader2 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
+import PageHeader from '../../../components/common/PageHeader';
 import AddBranchModal from '../components/AddBranchModal';
 import BranchDetailModal from '../components/BranchDetailModal';
 import { branchesService } from '../services/branches.service';
+import { notify } from '../../../utils/notify';
 
 export function BranchesPage() {
   const [branches, setBranches] = useState([]);
@@ -31,12 +33,34 @@ export function BranchesPage() {
   }, []);
 
   const handleAddBranch = async (newBranch) => {
-    const created = await branchesService.createBranch(newBranch);
-    setBranches((prev) => [created, ...prev]);
+    try {
+      const created = await branchesService.createBranch(newBranch);
+      setBranches((prev) => [created, ...prev]);
+      notify.success(`Branch "${created.name}" created.`);
+    } catch (err) {
+      notify.error(err.message || 'Failed to create branch.');
+      throw err;
+    }
   };
 
   return (
     <DashboardLayout>
+      <PageHeader
+        crumbs={['Home', 'Administration', 'Branches']}
+        title="Branches"
+        subtitle={`${branches.length} branch${branches.length === 1 ? '' : 'es'}`}
+        actions={
+          <button
+            type="button"
+            onClick={() => setIsAddModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#c88a29] hover:bg-[#d99a3d] text-[#2c1b15] text-xs font-bold transition-colors shadow-sm cursor-pointer select-none"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add branch</span>
+          </button>
+        }
+        className="mb-5"
+      />
       <div className="space-y-5 max-w-7xl mx-auto pb-16">
         {/* Top Notification Banner (matching exact screenshot) */}
         {bannerVisible && (
@@ -65,25 +89,7 @@ export function BranchesPage() {
           </div>
         )}
 
-        {/* Page Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
-          <div>
-            <h1 className="text-2xl font-bold text-[#2c1b15] tracking-tight">Branches</h1>
-            <p className="text-xs text-[#8f8278] mt-0.5">
-              {branches.length} branch{branches.length === 1 ? '' : 'es'}
-            </p>
-          </div>
-
-          {/* + Add Branch Button */}
-          <button
-            type="button"
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2c1b15] hover:bg-[#432b22] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Add branch</span>
-          </button>
-        </div>
+        {/* Page content */}
 
         {error && (
           <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
