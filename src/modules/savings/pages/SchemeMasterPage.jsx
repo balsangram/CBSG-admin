@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Copy,
   Plus,
@@ -6,16 +6,119 @@ import {
   X,
   ExternalLink,
   CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
-import { initialSchemeConfig, publishedSchemes } from '../services/savings.service';
+import { toast } from 'react-toastify';
+import {
+  initialSchemeConfig,
+  publishedSchemes,
+  savingsService,
+} from '../services/savings.service';
+
+// Map backend plan DTO -> form state
+const planToScheme = (plan) => ({
+  id: plan.id,
+  name: plan.schemeName || '',
+  planType: plan.planType || '',
+  minInvestment: plan.minimumInvestmentAmount ?? 0,
+  payout: plan.payout ?? '',
+  monthlyInterest: plan.monthlyInterest ?? 0,
+  monthlyInterestDate: plan.monthlyInterestDate
+    ? String(plan.monthlyInterestDate).slice(0, 10)
+    : '',
+  preClosureRule: plan.preClosureRule || '',
+  isLive: plan.status === 'PUBLISHED' || plan.isActive,
+  rules: (plan.planRules || []).map((r, i) => ({
+    id: `rule-${i}`,
+    name: r.ruleName || '',
+    description: r.description || '',
+  })),
+});
+
+// Map form state -> backend payload
+const schemeToPayload = (scheme) => ({
+  schemeName: scheme.name,
+  planType: scheme.planType,
+  minimumInvestmentAmount: Number(scheme.minInvestment),
+  payout: Number(scheme.payout),
+  monthlyInterest: Number(scheme.monthlyInterest),
+  monthlyInterestDate: scheme.monthlyInterestDate || null,
+  preClosureRule: scheme.preClosureRule || '',
+  status: scheme.isLive ? 'PUBLISHED' : 'DRAFT',
+  planRules: (scheme.rules || []).map((r) => ({
+    ruleName: r.name,
+    description: r.description,
+  })),
+});
+
+const EMPTY_SCHEME = {
+  name: 'New Custom Savings Plan',
+  planType: 'MIP',
+  minInvestment: 500,
+  payout: 180,
+  monthlyInterest: 1.2,
+  monthlyInterestDate: '',
+  preClosureRule: '',
+  isLive: false,
+  rules: [
+    {
+      id: 'rule-new-1',
+      name: 'Eligibility',
+      description: 'Resident Indian individuals aged 18+',
+    },
+  ],
+};
 
 export function SchemeMasterPage() {
   const [scheme, setScheme] = useState(initialSchemeConfig);
+  const [planId, setPlanId] = useState(null);
+  const [hasPlan, setHasPlan] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [calculatorSavings, setCalculatorSavings] = useState(100);
   const [showSignedInAlert, setShowSignedInAlert] = useState(true);
   const [showPublishedModal, setShowPublishedModal] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [livePlans, setLivePlans] = useState([]);
+
+  // Load the single plan (if any) on mount
+  useEffect(() => {
+    let cancelled = false;
+    savingsService
+      .getPlans()
+      .then((plans) => {
+        if (cancelled) return;
+        setLivePlans(plans);
+        if (plans.length > 0) {
+          const plan = plans[0];
+          setPlanId(plan.id);
+          setScheme(planToScheme(plan));
+          setHasPlan(true);
+        } else {
+          setScheme(EMPTY_SCHEME);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setScheme(EMPTY_SCHEME);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingPlan(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const showToast = (msg, kind = 'success') => {
+    if (kind === 'error') {
+      toast.error(msg);
+    } else {
+      toast.success(msg);
+    }
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 3000);
+  };
 
   // Calculate monthly interest earned
   const monthlyInterestEarned = ((calculatorSavings * (scheme.monthlyInterest || 1)) / 100).toFixed(2);
@@ -48,10 +151,22 @@ export function SchemeMasterPage() {
     }));
   };
 
-  const handleReset = () => {
-    setScheme(initialSchemeConfig);
-    setToastMessage('Scheme configuration reset to defaults.');
-    setTimeout(() => setToastMessage(''), 3000);
+  const handleReset = async () => {
+    if (planId) {
+      try {
+        const plans = await savingsService.getPlans();
+        const plan = plans.find((p) => p.id === planId);
+        if (plan) {
+          setScheme(planToScheme(plan));
+          showToast('Scheme configuration reloaded.');
+          return;
+        }
+      } catch {
+        // fall through to local reset
+      }
+    }
+    setScheme(hasPlan ? EMPTY_SCHEME : initialSchemeConfig);
+    showToast('Scheme configuration reset to defaults.');
   };
 
   const handleDuplicate = () => {
@@ -60,24 +175,45 @@ export function SchemeMasterPage() {
       name: `${prev.name} (Copy)`,
       isLive: false,
     }));
-    setToastMessage('Scheme duplicated. Ready for customization.');
-    setTimeout(() => setToastMessage(''), 3000);
+    showToast('Scheme duplicated. Ready for customization.');
   };
 
+  // Only one plan may exist — "New scheme" is disabled once one is created
   const handleNewScheme = () => {
-    setScheme({
-      name: 'New Custom Savings Plan',
-      planType: 'MIP',
-      minInvestment: 500,
-      payout: '180',
-      monthlyInterest: 1.2,
-      monthlyInterestDate: '1st of every month',
-      preClosureRule: '90 days lock-in. 1% penalty on pre-closure.',
-      isLive: false,
-      rules: [{ id: 'rule-new-1', name: 'Eligibility', description: 'Resident Indian individuals aged 18+' }],
-    });
-    setToastMessage('New draft scheme initialized.');
-    setTimeout(() => setToastMessage(''), 3000);
+    if (hasPlan) {
+      showToast('Only one plan can exist. Edit the current plan instead.', 'error');
+      return;
+    }
+    setScheme({ ...EMPTY_SCHEME });
+    setPlanId(null);
+    showToast('New draft scheme initialized.');
+  };
+
+  const handleSave = async () => {
+    if (!scheme.name?.trim()) {
+      showToast('Scheme name is required.', 'error');
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = schemeToPayload(scheme);
+      const saved = planId
+        ? await savingsService.updatePlan(planId, payload)
+        : await savingsService.createPlan(payload);
+      const mapped = planToScheme(saved);
+      setScheme(mapped);
+      setPlanId(saved.id);
+      setHasPlan(true);
+      setLivePlans((prev) => {
+        const rest = prev.filter((p) => p.id !== saved.id);
+        return [saved, ...rest];
+      });
+      showToast(planId ? 'Scheme updated successfully.' : 'Scheme created successfully.');
+    } catch (err) {
+      showToast(err.message || 'Failed to save scheme.', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -162,10 +298,22 @@ export function SchemeMasterPage() {
           <button
             type="button"
             onClick={handleNewScheme}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#2c1b15] hover:bg-[#1a0f0b] text-white text-xs font-medium transition-colors shadow-2xs cursor-pointer select-none"
+            disabled={hasPlan || loadingPlan}
+            title={hasPlan ? 'Only one plan can exist — edit the current one' : undefined}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#2c1b15] hover:bg-[#1a0f0b] text-white text-xs font-medium transition-colors shadow-2xs cursor-pointer select-none disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>New scheme</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || loadingPlan}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#c88a29] hover:bg-[#b57a1f] text-white text-xs font-semibold transition-colors shadow-2xs cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+            <span>{saving ? 'Saving…' : planId ? 'Save changes' : 'Create plan'}</span>
           </button>
         </div>
       </div>
@@ -247,17 +395,18 @@ export function SchemeMasterPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-semibold text-[#7a6e67] mb-1">
-                    Payout
+                    Payout(In days) 
                   </label>
                   <input
-                    type="text"
+                    type="number"
+                    min="1"
                     value={scheme.payout}
-                    onChange={(e) => handleFieldChange('payout', e.target.value)}
-                    placeholder="e.g. 180, 360, Monthly"
-                    className="w-full bg-white border border-[#ded8cb] focus:border-[#c88a29] rounded-xl px-3.5 py-2.5 text-xs text-[#2c1b15] font-semibold outline-none shadow-2xs"
+                    onChange={(e) => handleFieldChange('payout', e.target.value === '' ? '' : Number(e.target.value))}
+                    placeholder="e.g. 30, 90, 180"
+                    className="w-full bg-white border border-[#ded8cb] focus:border-[#c88a29] rounded-xl px-3.5 py-2.5 text-xs text-[#2c1b15] font-semibold outline-none shadow-2xs font-mono"
                   />
                   <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                    {['180', '360', 'Monthly', 'At Maturity'].map((preset) => (
+                    {[30, 60, 90, 180, 360].map((preset) => (
                       <button
                         key={preset}
                         type="button"
@@ -281,8 +430,14 @@ export function SchemeMasterPage() {
                   <input
                     type="number"
                     step="0.1"
+                    min="0"
                     value={scheme.monthlyInterest}
-                    onChange={(e) => handleFieldChange('monthlyInterest', Number(e.target.value))}
+                    onChange={(e) =>
+                      handleFieldChange(
+                        'monthlyInterest',
+                        Math.max(0, Number(e.target.value) || 0)
+                      )
+                    }
                     className="w-full bg-white border border-[#ded8cb] focus:border-[#c88a29] rounded-xl px-3.5 py-2.5 text-xs text-[#2c1b15] font-semibold outline-none shadow-2xs font-mono"
                   />
                 </div>
@@ -294,28 +449,11 @@ export function SchemeMasterPage() {
                   Monthly interest date
                 </label>
                 <input
-                  type="text"
+                  type="date"
                   value={scheme.monthlyInterestDate || ''}
                   onChange={(e) => handleFieldChange('monthlyInterestDate', e.target.value)}
-                  placeholder="e.g. 1st of every month, 10th, 180"
                   className="w-full bg-white border border-[#ded8cb] focus:border-[#c88a29] rounded-xl px-3.5 py-2.5 text-xs text-[#2c1b15] font-semibold outline-none shadow-2xs"
                 />
-                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                  {['1st of every month', '5th of month', '10th of month', 'End of month'].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => handleFieldChange('monthlyInterestDate', preset)}
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-medium border transition-colors cursor-pointer ${
-                        scheme.monthlyInterestDate === preset
-                          ? 'bg-[#2c1b15] text-white border-[#2c1b15]'
-                          : 'bg-[#faf8f4] text-[#61554d] border-[#ded8cb] hover:bg-white'
-                      }`}
-                    >
-                      {preset}
-                    </button>
-                  ))}
-                </div>
               </div>
 
               {/* Pre-closure rule */}
@@ -521,7 +659,19 @@ export function SchemeMasterPage() {
             </div>
 
             <div className="py-4 space-y-3">
-              {publishedSchemes.map((sch) => (
+              {(livePlans.length > 0
+                ? livePlans.map((plan) => ({
+                    id: plan.id,
+                    name: plan.schemeName,
+                    code: plan.planType,
+                    minInvestment: plan.minimumInvestmentAmount,
+                    monthlyInterest: `${plan.monthlyInterest}%`,
+                    payout: plan.payout,
+                    status: plan.status === 'PUBLISHED' ? 'Live' : 'Draft',
+                    accountsCount: null,
+                  }))
+                : publishedSchemes
+              ).map((sch) => (
                 <div
                   key={sch.id}
                   className="p-3.5 bg-[#faf8f4] border border-[#e8e2d5] rounded-xl flex items-center justify-between text-xs"
@@ -535,12 +685,18 @@ export function SchemeMasterPage() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#e7f7ed] text-[#0f7642]">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      sch.status === 'Live' || sch.status === 'PUBLISHED'
+                        ? 'bg-[#e7f7ed] text-[#0f7642]'
+                        : 'bg-[#fef1db] text-[#b46500]'
+                    }`}>
                       {sch.status}
                     </span>
-                    <span className="block text-[10px] text-[#8a7e75] mt-1 font-mono">
-                      {sch.accountsCount} active accounts
-                    </span>
+                    {sch.accountsCount != null && (
+                      <span className="block text-[10px] text-[#8a7e75] mt-1 font-mono">
+                        {sch.accountsCount} active accounts
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}

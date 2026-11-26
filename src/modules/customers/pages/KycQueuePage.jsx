@@ -1,69 +1,106 @@
-import React, { useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
   X,
   Eye,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 import DataTable from '../../../components/common/DataTable';
-import { mockKycQueueData, kycService } from '../services/kyc.service';
+import { kycService } from '../services/kyc.service';
 import { ROUTES } from '../../../utils/constants';
+
+const PAGE_SIZE = 10;
+
+// UI filter label -> backend status enum
+const FILTER_TO_STATUS = {
+  All: undefined,
+  Approved: 'VERIFIED',
+  Rejected: 'REJECTED',
+  Pending: 'PENDING',
+};
+
+const STATUS_BADGE = {
+  VERIFIED: 'bg-[#e7f7ed] text-[#0f7642]',
+  REJECTED: 'bg-[#fee2e2] text-[#b91c1c]',
+  PENDING: 'bg-[#fef1db] text-[#b46500]',
+  IN_PROGRESS: 'bg-[#fef1db] text-[#b46500]',
+  UNDER_REVIEW: 'bg-[#e0f2fe] text-[#0369a1]',
+};
+
+const STATUS_LABEL = {
+  VERIFIED: 'Approved',
+  REJECTED: 'Rejected',
+  PENDING: 'Pending',
+  IN_PROGRESS: 'In Progress',
+  UNDER_REVIEW: 'Under Review',
+};
+
+// Map API KYC list item -> table/review record shape
+const toRecord = (kyc) => ({
+  id: kyc.id,
+  customerId: kyc.userId, // used by /admin/kyc/:customerId
+  customer: kyc.customer?.name || 'Unknown',
+  phone: kyc.customer?.phone || '—',
+  email: kyc.customer?.email || '',
+  avatar: kyc.customer?.photo || null,
+  kycStatus: kyc.status,
+  reviewReason: kyc.rejectionReason || '—',
+  createdAt: kyc.createdAt,
+});
 
 export function KycQueuePage() {
   const navigate = useNavigate();
-  const [records, setRecords] = useState(mockKycQueueData);
+  const [records, setRecords] = useState([]);
+  const [meta, setMeta] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
+  const [pagination, setPagination] = useState({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState('All'); // 'All', 'Approved', 'Rejected', 'Pending'
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('All');
   const [showSignedInAlert, setShowSignedInAlert] = useState(true);
   const [toastMessage, setToastMessage] = useState('');
 
-  // Calculate live stats
-  const stats = useMemo(() => kycService.getStats(records), [records]);
+  // Debounce search input
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 400);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
-  // Filter records
-  const filteredRecords = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+  const fetchKycs = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await kycService.getKycList({
+        page: pagination.page,
+        limit: PAGE_SIZE,
+        status: FILTER_TO_STATUS[selectedFilter],
+        search: debouncedSearch || undefined,
+      });
+      setRecords((data?.kycs || []).map(toRecord));
+      setPagination(data?.pagination || { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 });
+      setMeta(data?.meta || { total: 0, pending: 0, approved: 0, rejected: 0 });
+    } catch (err) {
+      setError(err.message || 'Failed to load KYC queue.');
+    } finally {
+      setLoading(false);
+    }
+  }, [pagination.page, selectedFilter, debouncedSearch]);
 
-    return records.filter((rec) => {
-      const matchesSearch =
-        !q ||
-        rec.customer.toLowerCase().includes(q) ||
-        rec.phone.includes(q) ||
-        rec.branch.toLowerCase().includes(q);
+  useEffect(() => {
+    fetchKycs();
+  }, [fetchKycs]);
 
-      const matchesFilter =
-        selectedFilter === 'All' ||
-        rec.kycStatus.toLowerCase() === selectedFilter.toLowerCase();
+  // Reset to page 1 when filters/search change
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [selectedFilter, debouncedSearch]);
 
-      return matchesSearch && matchesFilter;
-    });
-  }, [records, searchQuery, selectedFilter]);
-
-  // Handle Approve action
-  const handleApprove = (id) => {
-    setRecords((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, kycStatus: 'Approved', reviewReason: '—' } : r
-      )
-    );
-    setToastMessage('Customer KYC approved and signed off by Maker-Checker.');
-    setTimeout(() => setToastMessage(''), 4000);
-  };
-
-  // Handle Reject action
-  const handleReject = (id, reason) => {
-    setRecords((prev) =>
-      prev.map((r) =>
-        r.id === id ? { ...r, kycStatus: 'Rejected', reviewReason: reason } : r
-      )
-    );
-    setToastMessage('KYC status updated to Rejected with review reason.');
-    setTimeout(() => setToastMessage(''), 4000);
-  };
-
-  // Navigate to the KYC review page with the record
   const openReview = (rec) => {
     navigate(ROUTES.KYC_REVIEW, { state: { record: rec } });
   };
@@ -76,12 +113,23 @@ export function KycQueuePage() {
       cellClassName: 'pl-5 pr-3',
       render: (rec) => (
         <div className="flex items-center gap-3">
-          <img
-            src={rec.avatar}
-            alt={rec.customer}
-            className="w-8 h-8 rounded-full object-cover border border-[#e0d9cb] shrink-0"
-          />
-          <span className="font-bold text-[#2c1b15]">{rec.customer}</span>
+          {rec.avatar ? (
+            <img
+              src={rec.avatar}
+              alt={rec.customer}
+              className="w-8 h-8 rounded-full object-cover border border-[#e0d9cb] shrink-0"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-[#f0ebdf] flex items-center justify-center text-[#7a6e67] text-[10px] font-bold shrink-0">
+              {rec.customer.slice(0, 2).toUpperCase()}
+            </div>
+          )}
+          <div className="min-w-0">
+            <span className="font-bold text-[#2c1b15] block truncate">{rec.customer}</span>
+            {rec.email && (
+              <span className="text-[10.5px] text-[#8a7e75] block truncate">{rec.email}</span>
+            )}
+          </div>
         </div>
       ),
     },
@@ -91,9 +139,17 @@ export function KycQueuePage() {
       cellClassName: 'text-[#5e5148] font-mono text-[11.5px] whitespace-nowrap',
     },
     {
-      key: 'branch',
-      header: 'Branch',
+      key: 'createdAt',
+      header: 'Submitted',
       cellClassName: 'text-[#5e5148] whitespace-nowrap',
+      render: (rec) =>
+        rec.createdAt
+          ? new Date(rec.createdAt).toLocaleDateString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            })
+          : '—',
     },
     {
       key: 'kycStatus',
@@ -102,14 +158,10 @@ export function KycQueuePage() {
       render: (rec) => (
         <span
           className={`inline-block px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold ${
-            rec.kycStatus === 'Approved'
-              ? 'bg-[#e7f7ed] text-[#0f7642]'
-              : rec.kycStatus === 'Rejected'
-              ? 'bg-[#fee2e2] text-[#b91c1c]'
-              : 'bg-[#fef1db] text-[#b46500]'
+            STATUS_BADGE[rec.kycStatus] || 'bg-stone-100 text-stone-600'
           }`}
         >
-          {rec.kycStatus}
+          {STATUS_LABEL[rec.kycStatus] || rec.kycStatus}
         </span>
       ),
     },
@@ -188,40 +240,35 @@ export function KycQueuePage() {
           KYC approval queue
         </h2>
         <p className="mt-0.5 text-xs text-[#7a6e67]">
-          {stats.total} customer records
+          {meta.total} customer records
         </p>
       </div>
 
-      {/* 3. Three Metric Statistics Cards */}
+      {/* 3. Three Metric Statistics Cards (from API meta) */}
       <div className="bg-white rounded-2xl border border-[#e8e2d5] shadow-2xs mb-5 p-5">
         <div className="grid grid-cols-3 divide-x divide-[#f0ebdF]">
-          {/* Approved */}
           <div className="pr-4 sm:pr-8">
             <span className="text-[11px] font-medium text-[#7a6e67] block">
               Approved
             </span>
             <span className="text-2xl sm:text-3xl font-extrabold text-[#2c1b15] tracking-tight">
-              {stats.approved}
+              {meta.approved}
             </span>
           </div>
-
-          {/* Rejected */}
           <div className="px-4 sm:px-8">
             <span className="text-[11px] font-medium text-[#7a6e67] block">
               Rejected
             </span>
             <span className="text-2xl sm:text-3xl font-extrabold text-[#2c1b15] tracking-tight">
-              {stats.rejected}
+              {meta.rejected}
             </span>
           </div>
-
-          {/* Pending */}
           <div className="pl-4 sm:pl-8">
             <span className="text-[11px] font-medium text-[#7a6e67] block">
               Pending
             </span>
             <span className="text-2xl sm:text-3xl font-extrabold text-[#2c1b15] tracking-tight">
-              {stats.pending}
+              {meta.pending}
             </span>
           </div>
         </div>
@@ -229,12 +276,11 @@ export function KycQueuePage() {
 
       {/* 4. Search and Filter Bar */}
       <div className="mb-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Search input */}
         <div className="relative flex-1 max-w-md">
           <Search className="w-3.5 h-3.5 text-[#8c8076] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search customer name or phone"
+            placeholder="Search customer name, email or phone"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-white text-[#2c1b15] placeholder:text-[#94887e] text-xs rounded-full border border-[#e2dbcd] focus:border-[#c8bfb0] pl-9 pr-8 py-2.5 transition-all outline-none shadow-2xs"
@@ -270,15 +316,67 @@ export function KycQueuePage() {
       </div>
 
       {/* 5. KYC Approval Queue Table */}
-      <DataTable
-        columns={columns}
-        data={filteredRecords}
-        emptyMessage="No KYC records match your criteria."
-      />
+      {loading ? (
+        <div className="flex items-center justify-center py-24 text-stone-500 gap-2">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span className="text-sm">Loading KYC queue…</span>
+        </div>
+      ) : error ? (
+        <div className="bg-white rounded-2xl border border-[#e8e2d5] p-12 text-center">
+          <p className="text-xs text-rose-600 mb-3">{error}</p>
+          <button
+            type="button"
+            onClick={fetchKycs}
+            className="px-4 py-2 bg-[#2c1b15] text-white rounded-xl text-xs font-semibold cursor-pointer"
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+        <>
+          <DataTable
+            columns={columns}
+            data={records}
+            emptyMessage="No KYC records match your criteria."
+          />
 
+          {/* Pagination */}
+          {pagination.totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-between text-xs text-[#7a6e67]">
+              <span>
+                Page {pagination.page} of {pagination.totalPages} ·{' '}
+                {pagination.total} records
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={pagination.page <= 1}
+                  onClick={() =>
+                    setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
+                  }
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#ded8cb] bg-white font-semibold text-[#2c1b15] hover:bg-[#faf7f0] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  Prev
+                </button>
+                <button
+                  type="button"
+                  disabled={pagination.page >= pagination.totalPages}
+                  onClick={() =>
+                    setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
+                  }
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#ded8cb] bg-white font-semibold text-[#2c1b15] hover:bg-[#faf7f0] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Next
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </DashboardLayout>
   );
 }
 
 export default KycQueuePage;
-

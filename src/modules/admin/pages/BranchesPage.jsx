@@ -1,19 +1,38 @@
-import React, { useState } from 'react';
-import { Plus, Building2, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Plus, Building2, X, Loader2 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 import AddBranchModal from '../components/AddBranchModal';
 import BranchDetailModal from '../components/BranchDetailModal';
 import { branchesService } from '../services/branches.service';
 
 export function BranchesPage() {
-  const [branches, setBranches] = useState(() => branchesService.getBranches());
+  const [branches, setBranches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [bannerVisible, setBannerVisible] = useState(true);
 
-  const handleAddBranch = (newBranch) => {
-    const updated = branchesService.addBranch(branches, newBranch);
-    setBranches(updated);
+  const fetchBranches = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const data = await branchesService.getBranches();
+      setBranches(data);
+    } catch (err) {
+      setError(err.message || 'Failed to load branches.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBranches();
+  }, []);
+
+  const handleAddBranch = async (newBranch) => {
+    const created = await branchesService.createBranch(newBranch);
+    setBranches((prev) => [created, ...prev]);
   };
 
   return (
@@ -50,6 +69,9 @@ export function BranchesPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
           <div>
             <h1 className="text-2xl font-bold text-[#2c1b15] tracking-tight">Branches</h1>
+            <p className="text-xs text-[#8f8278] mt-0.5">
+              {branches.length} branch{branches.length === 1 ? '' : 'es'}
+            </p>
           </div>
 
           {/* + Add Branch Button */}
@@ -63,47 +85,67 @@ export function BranchesPage() {
           </button>
         </div>
 
-        {/* 3 Branch Cards Grid (matching exact screenshot) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {branches.map((branch) => (
-            <div
-              key={branch.id}
-              onClick={() => setSelectedBranch(branch)}
-              className="bg-white rounded-2xl border border-[#e8e2d5] p-5 shadow-2xs hover:border-[#c88a29]/60 hover:shadow-md transition-all cursor-pointer group"
-            >
-              {/* Branch Header: Icon + Title + Manager */}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#2c1b15] text-[#cca04b] flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
-                  <Building2 className="w-4.5 h-4.5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-xs font-bold text-[#2c1b15] truncate group-hover:text-[#9e6212] transition-colors">
-                    {branch.name}
-                  </h3>
-                  <p className="text-[11px] text-[#8f8278] truncate mt-0.5">
-                    Manager: {branch.manager}
-                  </p>
-                </div>
-              </div>
+        {error && (
+          <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
+            {error}
+            <button type="button" className="ml-2 underline" onClick={fetchBranches}>
+              Retry
+            </button>
+          </div>
+        )}
 
-              {/* 3 Metrics Row */}
-              <div className="mt-4 pt-3 border-t border-[#f7f2ea] grid grid-cols-3 gap-2 text-left">
-                <div>
-                  <span className="text-[10px] text-[#8f8278] font-normal block">Customers</span>
-                  <span className="text-xs font-bold text-[#2c1b15] mt-0.5 block">{branch.customers}</span>
+        {loading ? (
+          <div className="flex items-center justify-center py-24 text-stone-500 gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="text-sm">Loading branches…</span>
+          </div>
+        ) : branches.length === 0 && !error ? (
+          <div className="bg-white rounded-2xl border border-[#e8e2d5] p-12 text-center text-xs text-[#8a7e75]">
+            No branches yet. Click "Add branch" to create one.
+          </div>
+        ) : (
+          /* Branch Cards Grid */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {branches.map((branch) => (
+              <div
+                key={branch.id}
+                onClick={() => setSelectedBranch(branch)}
+                className="bg-white rounded-2xl border border-[#e8e2d5] p-5 shadow-2xs hover:border-[#c88a29]/60 hover:shadow-md transition-all cursor-pointer group"
+              >
+                {/* Branch Header: Icon + Title + City */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#2c1b15] text-[#cca04b] flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                    <Building2 className="w-4.5 h-4.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-xs font-bold text-[#2c1b15] truncate group-hover:text-[#9e6212] transition-colors">
+                      {branch.name}
+                    </h3>
+                    <p className="text-[11px] text-[#8f8278] truncate mt-0.5">
+                      {branch.city}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-[10px] text-[#8f8278] font-normal block">Staff</span>
-                  <span className="text-xs font-bold text-[#2c1b15] mt-0.5 block">{branch.staff}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-[#8f8278] font-normal block">Book</span>
-                  <span className="text-xs font-bold text-[#2c1b15] mt-0.5 block">{branch.book}</span>
+
+                {/* Created date */}
+                <div className="mt-4 pt-3 border-t border-[#f7f2ea]">
+                  <span className="text-[10px] text-[#8f8278] font-normal block">
+                    Created
+                  </span>
+                  <span className="text-xs font-bold text-[#2c1b15] mt-0.5 block">
+                    {branch.createdAt
+                      ? new Date(branch.createdAt).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        })
+                      : '—'}
+                  </span>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Add Branch Modal */}
         <AddBranchModal
@@ -124,4 +166,3 @@ export function BranchesPage() {
 }
 
 export default BranchesPage;
-

@@ -1,44 +1,40 @@
 import React, { useState } from 'react';
-import { X, Building2, MapPin, Phone, User, Check } from 'lucide-react';
+import { X, Building2, MapPin, Check } from 'lucide-react';
 
 export function AddBranchModal({ isOpen, onClose, onAddBranch }) {
   const [formData, setFormData] = useState({
     name: '',
-    code: '',
-    manager: 'Sneha Iyer',
-    address: '',
-    phone: '',
-    email: '',
+    city: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name) return;
+    if (!formData.name.trim() || !formData.city.trim()) return;
 
-    const newBranch = {
-      id: `br-${Date.now()}`,
-      name: formData.name,
-      code: formData.code || `BR-${Math.floor(10 + Math.random() * 90)}`,
-      manager: formData.manager,
-      customers: 0,
-      staff: 1,
-      book: '₹0',
-      rawBook: 0,
-      address: formData.address || 'Commercial Hub, Main Road',
-      phone: formData.phone || '+91 20 0000 0000',
-      email: formData.email || 'branch@cbsg.online',
-      staffList: [{ name: formData.manager, role: 'Branch Manager' }],
-    };
+    setIsSubmitting(true);
+    setError('');
 
-    onAddBranch(newBranch);
-    setSuccess(true);
-    setTimeout(() => {
-      setSuccess(false);
-      onClose();
-    }, 800);
+    try {
+      await onAddBranch({
+        name: formData.name.trim(),
+        city: formData.city.trim(),
+      });
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        setFormData({ name: '', city: '' });
+        onClose();
+      }, 800);
+    } catch (err) {
+      setError(err.message || 'Failed to create branch.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -78,101 +74,41 @@ export function AddBranchModal({ isOpen, onClose, onAddBranch }) {
             </div>
           ) : (
             <>
-              {/* Branch Name & Code */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-2">
-                  <label className="block text-[11px] font-semibold text-[#61554d] mb-1">
-                    Branch Name *
-                  </label>
+              {error && (
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
+                  {error}
+                </div>
+              )}
+
+              {/* Branch Name */}
+              <div>
+                <label className="block text-[11px] font-semibold text-[#61554d] mb-1">
+                  Branch Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Nashik - College Road"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-[#e8e2d5] rounded-xl text-xs text-[#2c1b15] focus:outline-none focus:border-[#c88a29]"
+                />
+              </div>
+
+              {/* City */}
+              <div>
+                <label className="block text-[11px] font-semibold text-[#61554d] mb-1">
+                  City *
+                </label>
+                <div className="relative">
+                  <MapPin className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8f8278]" />
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Nashik - College Road"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-[#e8e2d5] rounded-xl text-xs text-[#2c1b15] focus:outline-none focus:border-[#c88a29]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-[#61554d] mb-1">
-                    Branch Code
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="NSK-04"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-[#e8e2d5] rounded-xl text-xs text-[#2c1b15] font-mono focus:outline-none focus:border-[#c88a29]"
-                  />
-                </div>
-              </div>
-
-              {/* Branch Manager */}
-              <div>
-                <label className="block text-[11px] font-semibold text-[#61554d] mb-1">
-                  Branch Manager
-                </label>
-                <div className="relative">
-                  <User className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8f8278]" />
-                  <select
-                    value={formData.manager}
-                    onChange={(e) => setFormData({ ...formData, manager: e.target.value })}
-                    className="w-full pl-9 pr-3 py-2 bg-white border border-[#e8e2d5] rounded-xl text-xs text-[#2c1b15] font-medium focus:outline-none focus:border-[#c88a29] cursor-pointer"
-                  >
-                    <option value="Sneha Iyer">Sneha Iyer (Team Lead)</option>
-                    <option value="Anil Mehta">Anil Mehta (Team Lead)</option>
-                    <option value="Meera Joshi">Meera Joshi (Team Lead)</option>
-                    <option value="Kavya Nair">Kavya Nair (Team Lead)</option>
-                    <option value="Manish Kadu">Manish Kadu (Branch Manager)</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Location Address */}
-              <div>
-                <label className="block text-[11px] font-semibold text-[#61554d] mb-1">
-                  Branch Address
-                </label>
-                <div className="relative">
-                  <MapPin className="w-3.5 h-3.5 absolute left-3 top-3 text-[#8f8278]" />
-                  <textarea
-                    rows={2}
-                    placeholder="Floor 2, Business Square, College Road, Nashik 422005"
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    placeholder="e.g. Nashik"
+                    value={formData.city}
+                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                     className="w-full pl-9 pr-3 py-2 bg-white border border-[#e8e2d5] rounded-xl text-xs text-[#2c1b15] focus:outline-none focus:border-[#c88a29]"
-                  />
-                </div>
-              </div>
-
-              {/* Contact Phone & Email */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-semibold text-[#61554d] mb-1">
-                    Official Phone
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8f8278]" />
-                    <input
-                      type="tel"
-                      placeholder="+91 253 257 0000"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      className="w-full pl-9 pr-3 py-2 bg-white border border-[#e8e2d5] rounded-xl text-xs text-[#2c1b15] focus:outline-none focus:border-[#c88a29]"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-[#61554d] mb-1">
-                    Branch Email
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="branch@cbsg.online"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-[#e8e2d5] rounded-xl text-xs text-[#2c1b15] focus:outline-none focus:border-[#c88a29]"
                   />
                 </div>
               </div>
@@ -188,9 +124,10 @@ export function AddBranchModal({ isOpen, onClose, onAddBranch }) {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#2c1b15] hover:bg-[#432b22] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+                  disabled={isSubmitting}
+                  className="px-5 py-2 bg-[#2c1b15] hover:bg-[#432b22] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-60"
                 >
-                  Confirm & Create
+                  {isSubmitting ? 'Creating…' : 'Confirm & Create'}
                 </button>
               </div>
             </>
@@ -202,4 +139,3 @@ export function AddBranchModal({ isOpen, onClose, onAddBranch }) {
 }
 
 export default AddBranchModal;
-

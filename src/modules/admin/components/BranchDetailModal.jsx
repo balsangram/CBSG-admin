@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Building2, MapPin, Phone, Mail, Users } from 'lucide-react';
+import { X, Building2, MapPin } from 'lucide-react';
 
 export function BranchDetailModal({ branch, isOpen, onClose }) {
   if (!isOpen || !branch) return null;
@@ -20,9 +20,7 @@ export function BranchDetailModal({ branch, isOpen, onClose }) {
                   Active Branch
                 </span>
               </div>
-              <p className="text-[11px] text-[#8f8278]">
-                Code: {branch.code} · Manager: {branch.manager}
-              </p>
+              <p className="text-[11px] text-[#8f8278]">{branch.city}</p>
             </div>
           </div>
           <button
@@ -36,59 +34,50 @@ export function BranchDetailModal({ branch, isOpen, onClose }) {
 
         {/* Content */}
         <div className="p-6 space-y-4 text-xs">
-          {/* Key Metrics Row */}
-          <div className="grid grid-cols-3 gap-2.5 p-3.5 bg-[#faf7f2] rounded-2xl border border-[#eee7dc] text-center">
-            <div>
-              <span className="text-[10px] text-[#8f8278] font-medium block">CUSTOMERS</span>
-              <span className="text-base font-bold text-[#2c1b15] mt-0.5 block">{branch.customers}</span>
-            </div>
-            <div>
-              <span className="text-[10px] text-[#8f8278] font-medium block">STAFF</span>
-              <span className="text-base font-bold text-[#2c1b15] mt-0.5 block">{branch.staff}</span>
-            </div>
-            <div>
-              <span className="text-[10px] text-[#8f8278] font-medium block">DEPOSIT BOOK</span>
-              <span className="text-base font-bold text-[#9e6212] mt-0.5 block">{branch.book}</span>
-            </div>
-          </div>
-
           {/* Details list */}
           <div className="space-y-2.5 pt-1">
-            <div className="flex items-start justify-between py-1.5 border-b border-[#f6f2ea]">
+            <div className="flex items-center justify-between py-1.5 border-b border-[#f6f2ea]">
               <span className="text-[#8f8278] flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5" /> Address
+                <MapPin className="w-3.5 h-3.5" /> City
               </span>
-              <span className="font-medium text-[#2c1b15] max-w-xs text-right">{branch.address}</span>
+              <span className="font-medium text-[#2c1b15]">{branch.city}</span>
             </div>
 
             <div className="flex items-center justify-between py-1.5 border-b border-[#f6f2ea]">
-              <span className="text-[#8f8278] flex items-center gap-2">
-                <Phone className="w-3.5 h-3.5" /> Official Phone
+              <span className="text-[#8f8278]">Branch ID</span>
+              <span className="font-semibold text-[#2c1b15] font-mono text-[11px]">
+                {branch.id}
               </span>
-              <span className="font-semibold text-[#2c1b15] font-mono">{branch.phone}</span>
             </div>
 
             <div className="flex items-center justify-between py-1.5 border-b border-[#f6f2ea]">
-              <span className="text-[#8f8278] flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5" /> Branch Email
+              <span className="text-[#8f8278]">Created</span>
+              <span className="font-medium text-[#2c1b15]">
+                {branch.createdAt
+                  ? new Date(branch.createdAt).toLocaleString('en-IN', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : '—'}
               </span>
-              <span className="font-medium text-[#2c1b15]">{branch.email}</span>
             </div>
-          </div>
 
-          {/* Staff Roster */}
-          <div>
-            <h4 className="text-[11px] font-bold text-[#2c1b15] mb-2 uppercase tracking-wide flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-[#8f8278]" />
-              <span>Assigned Personnel</span>
-            </h4>
-            <div className="divide-y divide-[#f2ede4] border border-[#e8e2d5] rounded-xl overflow-hidden">
-              {branch.staffList?.map((staff, idx) => (
-                <div key={idx} className="p-2.5 flex items-center justify-between hover:bg-[#faf8f4]">
-                  <span className="font-bold text-[#2c1b15]">{staff.name}</span>
-                  <span className="text-[#8f8278] text-[10.5px]">{staff.role}</span>
-                </div>
-              ))}
+            <div className="flex items-center justify-between py-1.5">
+              <span className="text-[#8f8278]">Last Updated</span>
+              <span className="font-medium text-[#2c1b15]">
+                {branch.updatedAt
+                  ? new Date(branch.updatedAt).toLocaleString('en-IN', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : '—'}
+              </span>
             </div>
           </div>
 

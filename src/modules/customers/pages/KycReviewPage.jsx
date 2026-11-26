@@ -14,6 +14,7 @@ import {
   Camera,
   Loader2,
 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 import { mockKycQueueData, kycService } from '../services/kyc.service';
 import { ROUTES } from '../../../utils/constants';
@@ -26,6 +27,35 @@ const SECTION_META = {
   photo: { label: 'Photo', icon: Camera },
   bankAccount: { label: 'Bank Account', icon: Landmark },
   nominee: { label: 'Nominee', icon: UserCheck },
+};
+
+// Fields per section — matches backend kyc.model.js rejectedFields
+const SECTION_FIELDS = {
+  personalDetails: ['name', 'phone', 'fathersName', 'dob'],
+  address: ['address', 'pinCode'],
+  aadhar: ['aadhar', 'aadharDocument'],
+  pan: ['pan', 'panDocument'],
+  photo: [],
+  bankAccount: ['bankName', 'accountNumber', 'ifscCode'],
+  nominee: ['nomineeName', 'nomineeRelation'],
+};
+
+const FIELD_LABELS = {
+  name: 'Full Name',
+  phone: 'Phone',
+  fathersName: "Father's Name",
+  dob: 'Date of Birth',
+  address: 'Address',
+  pinCode: 'PIN Code',
+  aadhar: 'Aadhaar Number',
+  aadharDocument: 'Aadhaar Document',
+  pan: 'PAN Number',
+  panDocument: 'PAN Document',
+  bankName: 'Bank Name',
+  accountNumber: 'Account Number',
+  ifscCode: 'IFSC Code',
+  nomineeName: 'Nominee Name',
+  nomineeRelation: 'Nominee Relation',
 };
 
 const STATUS_STYLES = {
@@ -61,10 +91,10 @@ export function KycReviewPage() {
   const [error, setError] = useState('');
   const [rejectReason, setRejectReason] = useState('');
   const [sectionReasons, setSectionReasons] = useState({});
+  const [rejectModalSection, setRejectModalSection] = useState(null);
+  const [checkedFields, setCheckedFields] = useState({});
   const [showRejectForm, setShowRejectForm] = useState(false);
-  const [activeSection, setActiveSection] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
     if (!record) {
@@ -81,9 +111,12 @@ export function KycReviewPage() {
     }
   }, [record, isRealRecord, navigate]);
 
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 4000);
+  const showToast = (msg, kind = 'success') => {
+    if (kind === 'error') {
+      toast.error(msg);
+    } else {
+      toast.success(msg);
+    }
   };
 
   const goBack = () => navigate(ROUTES.KYC_QUEUE);
@@ -92,15 +125,14 @@ export function KycReviewPage() {
   const approveAll = async () => {
     setIsSubmitting(true);
     try {
-      for (const section of Object.keys(SECTION_META)) {
-        await kycService.approveSection(record.customerId, section);
-      }
-      const updated = await kycService.getKycByCustomer(record.customerId);
+      // Single backend call — approves all reviewable sections and sends
+      // one customer notification (individual approves stay silent).
+      const updated = await kycService.approveAllKyc(record.customerId);
       setKyc(updated);
       showToast('All KYC sections approved.');
       setTimeout(goBack, 1200);
     } catch (err) {
-      setError(err.message || 'Failed to approve KYC');
+      showToast(err.message || 'Failed to approve KYC', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -116,31 +148,53 @@ export function KycReviewPage() {
       setKyc(updated);
       showToast(`${SECTION_META[section].label} approved.`);
     } catch (err) {
-      setError(err.message || 'Failed to approve section');
+      showToast(err.message || 'Failed to approve section', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const openRejectModal = (section) => {
+    setRejectModalSection(section);
+    setSectionReasons((prev) => ({ ...prev, [section]: prev[section] || '' }));
+    setCheckedFields({});
+    setError('');
+  };
+
+  const closeRejectModal = () => {
+    setRejectModalSection(null);
+    setCheckedFields({});
+  };
+
+  const toggleField = (field) => {
+    setCheckedFields((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
+
   const rejectOne = async (section) => {
-    const reason = sectionReasons[section]?.trim();
+    const reason = (sectionReasons[section] || '').trim();
     if (!reason) {
-      setError('Please enter a rejection reason for this section.');
+      showToast('Rejection reason is required.', 'error');
       return;
     }
+
+    const rejectedFields = {};
+    for (const field of SECTION_FIELDS[section] || []) {
+      rejectedFields[field] = Boolean(checkedFields[field]);
+    }
+
     setIsSubmitting(true);
     try {
       const updated = await kycService.rejectSection(
         record.customerId,
         section,
-        { rejectionReason: reason }
+        { rejectionReason: reason, rejectedFields }
       );
       setKyc(updated);
-      setActiveSection(null);
+      closeRejectModal();
       setSectionReasons((prev) => ({ ...prev, [section]: '' }));
       showToast(`${SECTION_META[section].label} rejected.`);
     } catch (err) {
-      setError(err.message || 'Failed to reject section');
+      showToast(err.message || 'Failed to reject section', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -149,7 +203,7 @@ export function KycReviewPage() {
   const rejectEntire = async () => {
     const reason = rejectReason.trim();
     if (!reason) {
-      setError('Overall rejection reason is required.');
+      showToast('Overall rejection reason is required.', 'error');
       return;
     }
     setIsSubmitting(true);
@@ -160,7 +214,7 @@ export function KycReviewPage() {
       showToast('KYC rejected.');
       setTimeout(goBack, 1200);
     } catch (err) {
-      setError(err.message || 'Failed to reject KYC');
+      showToast(err.message || 'Failed to reject KYC', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -208,20 +262,31 @@ export function KycReviewPage() {
     overallStatus
   );
 
+  // Section-level gating: actions stay available until every section is
+  // VERIFIED — a single rejected section must not freeze the rest.
+  const sectionKeys = isRealRecord && kyc ? Object.keys(SECTION_META) : [];
+  const allVerified =
+    sectionKeys.length > 0 &&
+    sectionKeys.every((key) => kyc[key]?.status === 'VERIFIED');
+  const allRejected =
+    sectionKeys.length > 0 &&
+    sectionKeys.every((key) => kyc[key]?.status === 'REJECTED');
+
+  // Button rules:
+  // - any VERIFIED section  -> hide "Reject Entire KYC"
+  // - any REJECTED section  -> disable "Approve All Sections"
+  // - all verified/rejected -> everything hidden (above)
+  const verifiedCount = sectionKeys.filter(
+    (key) => kyc?.[key]?.status === 'VERIFIED'
+  ).length;
+  const rejectedCount = sectionKeys.filter(
+    (key) => kyc?.[key]?.status === 'REJECTED'
+  ).length;
+  const hasVerified = verifiedCount > 0;
+  const hasRejected = rejectedCount > 0;
+
   return (
     <DashboardLayout>
-      {toastMessage && (
-        <div className="mb-4 py-2.5 px-4 bg-[#e7f7ed] border border-emerald-200 text-emerald-900 rounded-xl text-xs font-semibold flex items-center justify-between shadow-xs animate-fadeIn">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-emerald-600" />
-            <span>{toastMessage}</span>
-          </div>
-          <button type="button" onClick={() => setToastMessage('')}>
-            ✕
-          </button>
-        </div>
-      )}
-
       {error && (
         <div className="mb-4 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
           {error}
@@ -331,7 +396,6 @@ export function KycReviewPage() {
             {Object.entries(SECTION_META).map(([key, meta]) => {
               const section = kyc[key] || {};
               const Icon = meta.icon;
-              const isRejecting = activeSection === key;
 
               return (
                 <div key={key} className="px-5 py-4">
@@ -351,7 +415,7 @@ export function KycReviewPage() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <StatusBadge status={section.status} />
-                      {!isFinal && section.status !== 'VERIFIED' && (
+                      {!allVerified && section.status !== 'VERIFIED' && (
                         <>
                           <button
                             type="button"
@@ -364,9 +428,7 @@ export function KycReviewPage() {
                           <button
                             type="button"
                             disabled={isSubmitting}
-                            onClick={() =>
-                              setActiveSection(isRejecting ? null : key)
-                            }
+                            onClick={() => openRejectModal(key)}
                             className="px-2.5 py-1 rounded-lg border border-rose-200 text-rose-700 bg-rose-50 text-[11px] font-semibold hover:bg-rose-100 disabled:opacity-50 cursor-pointer"
                           >
                             Reject
@@ -376,42 +438,6 @@ export function KycReviewPage() {
                     </div>
                   </div>
 
-                  {isRejecting && (
-                    <div className="mt-3 p-3 bg-[#faf8f4] border border-[#e8e2d5] rounded-xl space-y-2 animate-fadeIn">
-                      <label className="text-[11px] font-bold text-[#2c1b15] block">
-                        Rejection reason for {meta.label}
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={sectionReasons[key] || ''}
-                        onChange={(e) =>
-                          setSectionReasons((prev) => ({
-                            ...prev,
-                            [key]: e.target.value,
-                          }))
-                        }
-                        placeholder="e.g. Document is blurry, details mismatch…"
-                        className="w-full bg-white border border-[#ded8cb] rounded-lg p-2 text-xs text-[#2c1b15] outline-none"
-                      />
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setActiveSection(null)}
-                          className="px-2.5 py-1 text-xs text-[#7a6e67] hover:text-[#2c1b15]"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          disabled={isSubmitting}
-                          onClick={() => rejectOne(key)}
-                          className="px-3 py-1 bg-rose-600 text-white rounded-lg text-xs font-semibold hover:bg-rose-700 disabled:opacity-50"
-                        >
-                          Confirm Rejection
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -522,8 +548,8 @@ export function KycReviewPage() {
         </>
       )}
 
-      {/* Reject entire KYC (real mode) */}
-      {isRealRecord && !isFinal && (
+      {/* Reject entire KYC (real mode) — hidden once any section is approved */}
+      {isRealRecord && !allVerified && !allRejected && !hasVerified && (
         <div className="bg-white rounded-2xl border border-[#e8e2d5] shadow-2xs p-5 mb-5">
           {!showRejectForm ? (
             <button
@@ -569,14 +595,15 @@ export function KycReviewPage() {
       )}
 
       {/* Footer actions */}
-      {!isFinal && (
+      {(isRealRecord ? !allVerified : !isFinal) && (
         <div className="flex items-center justify-end gap-3 pb-4">
           {isRealRecord ? (
             <button
               type="button"
-              disabled={isSubmitting}
+              disabled={isSubmitting || hasRejected}
+              title={hasRejected ? 'Resolve rejected sections first' : undefined}
               onClick={approveAll}
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold cursor-pointer shadow-2xs disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold cursor-pointer shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CheckCircle className="w-4 h-4" />
               {isSubmitting ? 'Processing…' : 'Approve All Sections'}
@@ -636,6 +663,107 @@ export function KycReviewPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ===== Section Reject Popup (fields + mandatory reason) ===== */}
+      {rejectModalSection && isRealRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/50 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-3xl border border-[#e8e2d5] shadow-2xl w-full max-w-md overflow-hidden">
+            {/* Header */}
+            <div className="p-5 border-b border-[#f2ede4] flex items-center justify-between bg-[#faf8f4]">
+              <div>
+                <h3 className="text-sm font-bold text-[#2c1b15]">
+                  Reject {SECTION_META[rejectModalSection]?.label}
+                </h3>
+                <p className="text-[11px] text-[#8f8278] mt-0.5">
+                  Select the fields to flag and provide a reason.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeRejectModal}
+                className="p-1.5 rounded-lg text-[#8f8278] hover:text-[#2c1b15] hover:bg-[#ede7dc] cursor-pointer"
+              >
+                <XCircle className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 space-y-4 text-xs">
+              {/* Field checkboxes */}
+              {(SECTION_FIELDS[rejectModalSection] || []).length > 0 && (
+                <div>
+                  <span className="text-[11px] font-bold text-[#2c1b15] block mb-2">
+                    Flagged fields
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {SECTION_FIELDS[rejectModalSection].map((field) => (
+                      <label
+                        key={field}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border cursor-pointer transition-colors ${
+                          checkedFields[field]
+                            ? 'border-rose-300 bg-rose-50'
+                            : 'border-[#e8e2d5] bg-white hover:border-[#c8bfb0]'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={Boolean(checkedFields[field])}
+                          onChange={() => toggleField(field)}
+                          className="w-3.5 h-3.5 accent-rose-600"
+                        />
+                        <span className="text-[#2c1b15] font-medium">
+                          {FIELD_LABELS[field] || field}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Mandatory reason */}
+              <div>
+                <label className="text-[11px] font-bold text-[#2c1b15] block mb-1">
+                  Rejection reason <span className="text-rose-600">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={sectionReasons[rejectModalSection] || ''}
+                  onChange={(e) =>
+                    setSectionReasons((prev) => ({
+                      ...prev,
+                      [rejectModalSection]: e.target.value,
+                    }))
+                  }
+                  placeholder="e.g. Document is blurry, details do not match…"
+                  className="w-full bg-white border border-[#ded8cb] rounded-lg p-2.5 text-xs text-[#2c1b15] outline-none focus:border-rose-400"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 py-4 border-t border-[#f2ede4] flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={closeRejectModal}
+                className="px-4 py-2 border border-[#e8e2d5] rounded-xl text-xs font-semibold text-[#61554d] hover:bg-[#faf7f2] cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={
+                  isSubmitting ||
+                  !(sectionReasons[rejectModalSection] || '').trim()
+                }
+                onClick={() => rejectOne(rejectModalSection)}
+                className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? 'Rejecting…' : 'Confirm Rejection'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </DashboardLayout>

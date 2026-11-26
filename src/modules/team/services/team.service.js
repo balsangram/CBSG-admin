@@ -1,3 +1,97 @@
+import { api } from '../../../services/api';
+
+const FALLBACK_AVATAR =
+  'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&q=80';
+
+const formatINR = (n) => `₹${(n || 0).toLocaleString('en-IN')}`;
+
+// Map GET /admin/team/tree response -> org chart data shape
+export const mapTreeToOrgData = ({ tree = [], unassigned = [] } = {}) => {
+  const toLead = (tl, index) => {
+    const execs = tl.executives || [];
+    const execCustomerCount = execs.reduce(
+      (sum, e) => sum + (e.customers?.length || 0),
+      0
+    );
+    const execVolume = execs.reduce((sum, e) => sum + (e.totalSaving || 0), 0);
+
+    return {
+      id: tl.id,
+      name: tl.name,
+      role: 'Team Lead',
+      code: tl.employeeId || `TL-${index + 1}`,
+      branch: tl.city || tl.branch || '—',
+      avatar: tl.photo || FALLBACK_AVATAR,
+      customers: execCustomerCount,
+      volume: formatINR(execVolume),
+      rawVolume: execVolume,
+      incentives: '₹0',
+      rawIncentives: 0,
+      subordinates: execs.map((exec) => ({
+        id: exec.id,
+        name: exec.name,
+        role: 'Executive Manager',
+        code: exec.employeeId || 'EM',
+        branch: exec.city || exec.branch || '—',
+        avatar: exec.photo || FALLBACK_AVATAR,
+        customers: exec.customers?.length || 0,
+        volume: formatINR(exec.totalSaving),
+        rawVolume: exec.totalSaving || 0,
+        incentives: '₹0',
+        rawIncentives: 0,
+        reportsTo: tl.name,
+        customerList: exec.customers || [],
+      })),
+    };
+  };
+
+  const leads = tree.map(toLead);
+
+  // Executive managers with no valid team lead
+  if (unassigned.length) {
+    leads.push({
+      id: 'unassigned-lead',
+      name: 'Unassigned',
+      role: 'Team Lead',
+      code: '—',
+      branch: '—',
+      avatar: FALLBACK_AVATAR,
+      customers: unassigned.reduce((s, e) => s + (e.customers?.length || 0), 0),
+      volume: formatINR(unassigned.reduce((s, e) => s + (e.totalSaving || 0), 0)),
+      rawVolume: unassigned.reduce((s, e) => s + (e.totalSaving || 0), 0),
+      incentives: '₹0',
+      rawIncentives: 0,
+      subordinates: unassigned.map((exec) => ({
+        id: exec.id,
+        name: exec.name,
+        role: 'Executive Manager',
+        code: exec.employeeId || 'EM',
+        branch: exec.city || exec.branch || '—',
+        avatar: exec.photo || FALLBACK_AVATAR,
+        customers: exec.customers?.length || 0,
+        volume: formatINR(exec.totalSaving),
+        rawVolume: exec.totalSaving || 0,
+        incentives: '₹0',
+        rawIncentives: 0,
+        reportsTo: 'Unassigned',
+        customerList: exec.customers || [],
+      })),
+    });
+  }
+
+  const mid = Math.ceil(leads.length / 2);
+
+  return {
+    admin: {
+      id: 'admin-cbsg',
+      title: 'CBSG Finance Limited · Admin',
+      subtitle: `${tree.reduce((s, t) => s + (t.executives?.length || 0), 0)} executives · ${leads.length} team leads`,
+    },
+    leftColumn: leads.slice(0, mid),
+    rightColumn: leads.slice(mid),
+  };
+};
+
 // Service for Team & Incentives structure and hierarchy
 export const INITIAL_TEAM_METRICS = {
   teamLeaders: 4,
@@ -109,6 +203,12 @@ export const INITIAL_ORG_DATA = {
 export const teamService = {
   getOrgData: () => JSON.parse(JSON.stringify(INITIAL_ORG_DATA)),
   getMetrics: () => ({ ...INITIAL_TEAM_METRICS }),
+
+  // Real API: team hierarchy tree
+  async getTeamTree() {
+    const { data } = await api.get('/admin/team/tree');
+    return data?.data || { tree: [], unassigned: [] };
+  },
 
   // Recalculate metrics from current org data
   calculateMetrics: (orgData) => {

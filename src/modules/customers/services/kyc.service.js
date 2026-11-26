@@ -270,6 +270,11 @@ export const kycService = {
     return data?.data;
   },
 
+  async approveAllKyc(customerId) {
+    const { data } = await api.post(`/admin/kyc/${customerId}/approve-all`);
+    return data?.data;
+  },
+
   async rejectSection(customerId, section, payload = {}) {
     const { data } = await api.patch(
       `/admin/kyc/${customerId}/sections/${section}/reject`,

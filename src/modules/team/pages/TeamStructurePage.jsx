@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Users,
   UserCheck,
@@ -10,20 +10,28 @@ import {
   CheckCircle2,
   Undo2,
   Info,
+  Loader2,
 } from 'lucide-react';
 import DashboardLayout from '../../../components/layout/DashboardLayout';
 import OrgChartNode from '../components/OrgChartNode';
 import TeamTableView from '../components/TeamTableView';
 import AddMemberModal from '../components/AddMemberModal';
+import AddTargetModal from '../components/AddTargetModal';
 import MemberDetailModal from '../components/MemberDetailModal';
-import { INITIAL_ORG_DATA, teamService } from '../services/team.service';
+import { INITIAL_ORG_DATA, mapTreeToOrgData, teamService } from '../services/team.service';
+import { api } from '../../../services/api';
+
+const EMPTY_ORG = { admin: { id: 'admin-cbsg', title: 'CBSG Finance Limited · Admin', subtitle: '' }, leftColumn: [], rightColumn: [] };
 
 export function TeamStructurePage() {
   const [viewMode, setViewMode] = useState('org'); // 'org' | 'table'
-  const [orgData, setOrgData] = useState(() => teamService.getOrgData());
+  const [orgData, setOrgData] = useState(EMPTY_ORG);
   const [metrics, setMetrics] = useState(() => teamService.getMetrics());
-  const [flatMembers, setFlatMembers] = useState(() => teamService.getAllMembersFlat(INITIAL_ORG_DATA));
+  const [flatMembers, setFlatMembers] = useState(() => teamService.getAllMembersFlat(EMPTY_ORG));
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isTargetModalOpen, setIsTargetModalOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
 
   // Drag and Drop States
@@ -31,7 +39,7 @@ export function TeamStructurePage() {
   const [isAdminDropActive, setIsAdminDropActive] = useState(false);
   const [isPromoteDropActive, setIsPromoteDropActive] = useState(false);
 
-  // History for Undo
+  // History for Undo (local reorder only — server mutations refetch instead)
   const [history, setHistory] = useState([]);
   const [toast, setToast] = useState(null); // { message, type }
 
@@ -40,6 +48,42 @@ export function TeamStructurePage() {
     setTimeout(() => {
       setToast((prev) => (prev === message ? null : prev));
     }, 4500);
+  };
+
+  const applyOrgData = (newOrgData) => {
+    setOrgData(newOrgData);
+    setMetrics(teamService.calculateMetrics(newOrgData));
+    setFlatMembers(teamService.getAllMembersFlat(newOrgData));
+  };
+
+  const fetchTree = useCallback(async () => {
+    try {
+      setLoading(true);
+      setLoadError('');
+      const tree = await teamService.getTeamTree();
+      applyOrgData(mapTreeToOrgData(tree));
+    } catch (err) {
+      setLoadError(err.message || 'Failed to load team structure.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTree();
+  }, [fetchTree]);
+
+  // Reassign an agent via API, then refresh the tree
+  const patchAgent = async (agentId, payload, successMsg) => {
+    try {
+      await api.patch(`/admin/agents/${agentId}`, payload);
+      await fetchTree();
+      showToast(successMsg);
+      return true;
+    } catch (err) {
+      showToast(err.message || 'Update failed');
+      return false;
+    }
   };
 
   const pushHistory = (newOrgData) => {
@@ -61,8 +105,8 @@ export function TeamStructurePage() {
   };
 
   const handleResetHierarchy = () => {
-    pushHistory(teamService.getOrgData());
-    showToast('Hierarchy reset to initial configuration');
+    fetchTree();
+    showToast('Team structure refreshed');
   };
 
   // Drag Start Handlers
@@ -94,33 +138,30 @@ export function TeamStructurePage() {
   };
 
   // Drop on a Team Lead card
-  const handleDropOnLead = (dragged, targetLeadId, dropMode = 'nest') => {
+  const handleDropOnLead = async (dragged, targetLeadId, dropMode = 'nest') => {
     if (!dragged) return;
 
     if (dragged.type === 'EXECUTIVE') {
-      // Move Executive Manager from one Team Lead to another
-      const result = teamService.moveExecutiveToLead(orgData, dragged.id, targetLeadId);
+      // Move Executive Manager under another Team Lead
+      await patchAgent(
+        dragged.id,
+        { teamLeadId: targetLeadId },
+        `Moved ${dragged.member.name} under new Team Lead`
+      );
+    } else if (dragged.type === 'TEAM_LEAD' && dropMode === 'nest') {
+      // Demote Team Lead to Executive Manager under target Team Lead
+      await patchAgent(
+        dragged.id,
+        { role: 'executive_manager', teamLeadId: targetLeadId },
+        `Moved ${dragged.member.name} as Executive Manager`
+      );
+    } else if (dragged.type === 'TEAM_LEAD') {
+      // Swap is visual-only (columns); keep local reorder
+      const result = teamService.swapTeamLeads(orgData, dragged.id, targetLeadId);
       if (result.success) {
         pushHistory(result.orgData);
-        showToast(`Moved ${result.member.name} under ${result.target.name}`);
-      }
-    } else if (dragged.type === 'TEAM_LEAD') {
-      if (dragged.id === targetLeadId) return;
-
-      if (dropMode === 'nest') {
-        // Demote Team Lead to become Executive Manager under target Team Lead ("team lead to manager")
-        const result = teamService.demoteLeadToExecutive(orgData, dragged.id, targetLeadId);
-        if (result.success) {
-          pushHistory(result.orgData);
-          showToast(`Moved ${result.member.name} as Executive Manager under ${result.target.name}`);
-        }
-      } else {
-        // Swap positions of the two Team Leads
-        const result = teamService.swapTeamLeads(orgData, dragged.id, targetLeadId);
-        if (result.success) {
-          pushHistory(result.orgData);
-          showToast(`Swapped positions of Team Leads`);
-        }
+        applyOrgData(result.orgData);
+        showToast('Swapped Team Lead positions');
       }
     }
     handleDragEnd();
@@ -137,30 +178,26 @@ export function TeamStructurePage() {
   };
 
   // Promote Executive Manager to Team Lead ("manager to team lead")
-  const handlePromoteToLead = (execId, targetColumn = 'rightColumn') => {
-    const result = teamService.promoteExecutiveToLead(orgData, execId, targetColumn);
-    if (result.success) {
-      pushHistory(result.orgData);
-      showToast(`${result.member.name} promoted to Team Lead (Reports directly to Admin)`);
-    }
+  const handlePromoteToLead = async (execId, targetColumn = 'rightColumn') => {
+    await patchAgent(
+      execId,
+      { role: 'team_lead', teamLeadId: null },
+      'Promoted to Team Lead'
+    );
     handleDragEnd();
   };
 
   // Quick action from modal or menu
-  const handleQuickMoveExec = (execId, targetLeadId) => {
-    const result = teamService.moveExecutiveToLead(orgData, execId, targetLeadId);
-    if (result.success) {
-      pushHistory(result.orgData);
-      showToast(`Moved ${result.member.name} under ${result.target.name}`);
-    }
+  const handleQuickMoveExec = async (execId, targetLeadId) => {
+    await patchAgent(execId, { teamLeadId: targetLeadId }, 'Executive reassigned');
   };
 
-  const handleQuickDemoteLead = (leadId, targetLeadId) => {
-    const result = teamService.demoteLeadToExecutive(orgData, leadId, targetLeadId);
-    if (result.success) {
-      pushHistory(result.orgData);
-      showToast(`Moved ${result.member.name} as Executive Manager under ${result.target.name}`);
-    }
+  const handleQuickDemoteLead = async (leadId, targetLeadId) => {
+    await patchAgent(
+      leadId,
+      { role: 'executive_manager', teamLeadId: targetLeadId },
+      'Demoted to Executive Manager'
+    );
   };
 
   // Add Member
@@ -257,6 +294,16 @@ export function TeamStructurePage() {
               <span className="hidden md:inline">Reset</span>
             </button>
 
+            {/* + Add Target Level Button */}
+            <button
+              type="button"
+              onClick={() => setIsTargetModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-[#faf7f2] border border-[#e8e2d5] text-[#2c1b15] rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
+            >
+              <Award className="w-3.5 h-3.5 text-[#c88a29]" />
+              <span>Add target</span>
+            </button>
+
             {/* + Add Member Button */}
             <button
               type="button"
@@ -269,6 +316,24 @@ export function TeamStructurePage() {
           </div>
         </div>
 
+        {loading ? (
+          <div className="flex items-center justify-center py-24 text-stone-500 gap-2">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="text-sm">Loading team structure…</span>
+          </div>
+        ) : loadError ? (
+          <div className="bg-white rounded-2xl border border-[#e8e2d5] p-12 text-center">
+            <p className="text-xs text-rose-600 mb-3">{loadError}</p>
+            <button
+              type="button"
+              onClick={fetchTree}
+              className="px-4 py-2 bg-[#2c1b15] text-white rounded-xl text-xs font-semibold cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+        <>
         {/* 4 Summary Metrics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Team Leaders */}
@@ -481,6 +546,8 @@ export function TeamStructurePage() {
             </div>
           </div>
         )}
+        </>
+        )}
 
         {/* Floating Toast Notification with Undo */}
         {toast && (
@@ -504,6 +571,12 @@ export function TeamStructurePage() {
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
           onAddMember={handleAddMember}
+        />
+
+        {/* Add Target Level Modal */}
+        <AddTargetModal
+          isOpen={isTargetModalOpen}
+          onClose={() => setIsTargetModalOpen(false)}
         />
 
         {/* Member Details Modal */}

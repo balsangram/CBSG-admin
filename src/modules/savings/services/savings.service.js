@@ -1,3 +1,5 @@
+import { api } from '../../../services/api';
+
 /**
  * Savings Schemes & Deposit Accounts Dataset & Service
  * Matches CBSG Finance Limited Savings Modules
@@ -223,6 +225,23 @@ export const savingsService = {
 
   getPublishedSchemes() {
     return publishedSchemes;
+  },
+
+  // ---------- Real plan API (/admin/plans) ----------
+
+  async getPlans() {
+    const { data } = await api.get('/admin/plans');
+    return data?.data || [];
+  },
+
+  async createPlan(payload) {
+    const { data } = await api.post('/admin/plans', payload);
+    return data?.data;
+  },
+
+  async updatePlan(id, payload) {
+    const { data } = await api.patch(`/admin/plans/${id}`, payload);
+    return data?.data;
   },
 };
 

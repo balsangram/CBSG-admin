@@ -31,8 +31,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status = error.response?.status;
+    const data = error.response?.data;
+    const details =
+      Array.isArray(data?.errors) && data.errors.length
+        ? `: ${data.errors.join(', ')}`
+        : '';
     const message =
-      error.response?.data?.message ||
+      (data?.message ? `${data.message}${details}` : null) ||
       error.message ||
       'Something went wrong. Please try again.';
 
